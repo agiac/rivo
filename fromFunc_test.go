@@ -2,11 +2,41 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
 )
+
+func ExampleFromFunc() {
+	count := atomic.Int32{}
+
+	genFn := func(ctx context.Context) (int32, error) {
+		value := count.Add(1)
+
+		if value > 5 {
+			return 0, ErrEOS
+		}
+
+		return value, nil
+	}
+
+	in := FromFunc(genFn)
+
+	s := in(context.Background(), nil)
+
+	for item := range s {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
 
 func TestFromFunc(t *testing.T) {
 	t.Run("generate items from function", func(t *testing.T) {

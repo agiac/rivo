@@ -4,11 +4,17 @@ import (
 	"fmt"
 )
 
+// options contains common configuration options for a Pipeable.
 type options struct {
-	poolSize        int
-	bufferSize      int
-	stopOnError     bool
-	extraValidation func(o options) error
+	poolSize    int
+	bufferSize  int
+	stopOnError bool
+}
+
+var defaultOptions = options{
+	poolSize:    1,
+	bufferSize:  0,
+	stopOnError: false,
 }
 
 func (o options) apply(opts ...Option) options {
@@ -28,15 +34,11 @@ func (o options) validate() error {
 		return fmt.Errorf("buffer size must be greater than or equal to 0")
 	}
 
-	if o.extraValidation != nil {
-		return o.extraValidation(o)
-	}
-
 	return nil
 }
 
 func mustOptions(opts ...Option) options {
-	o := defaultOptions().apply(opts...)
+	o := defaultOptions.apply(opts...)
 
 	if err := o.validate(); err != nil {
 		panic(fmt.Errorf("invalid options: %w", err))
@@ -45,34 +47,24 @@ func mustOptions(opts ...Option) options {
 	return o
 }
 
-func defaultOptions() options {
-	return options{
-		poolSize:    1,
-		bufferSize:  0,
-		stopOnError: false,
-	}
-}
-
+// Option is a configuration option for a Pipeable.
 type Option func(*options)
 
-func withExtraValidation(f func(o options) error) Option {
-	return func(o *options) {
-		o.extraValidation = f
-	}
-}
-
+// WithPoolSize sets the number of goroutines that will be used to process items concurrently. The default is 1.
 func WithPoolSize(size int) Option {
 	return func(o *options) {
 		o.poolSize = size
 	}
 }
 
+// WithBufferSize sets the size of the output channel buffer. The default is 0 (unbuffered).
 func WithBufferSize(size int) Option {
 	return func(o *options) {
 		o.bufferSize = size
 	}
 }
 
+// WithStopOnError determines whether the Pipeable should stop processing items when an error occurs. The default is false.
 func WithStopOnError(stop bool) Option {
 	return func(o *options) {
 		o.stopOnError = stop

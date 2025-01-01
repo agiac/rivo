@@ -2,10 +2,32 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExamplePipe() {
+	a := Of(1, 2, 3, 4, 5)
+
+	b := Map(func(ctx context.Context, i Item[int]) (int, error) {
+		return i.Val + 1, nil
+	})
+
+	p := Pipe(a, b)
+
+	for _, item := range p.Collect() {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 2
+	// 3
+	// 4
+	// 5
+	// 6
+}
 
 func TestPipe(t *testing.T) {
 	t.Run("pipe and collect", func(t *testing.T) {

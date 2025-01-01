@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Map returns a Pipeable that applies a function to each item from the input stream.
 func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) Pipeable[T, U] {
 	o := mustOptions(opt...)
 

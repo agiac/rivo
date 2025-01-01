@@ -2,10 +2,29 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExampleFilter() {
+	in := Of(1, 2, 3, 4, 5)
+
+	f := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+		return i.Val%2 == 0, nil
+	})
+
+	p := Pipe(in, f)
+
+	for _, item := range p.Collect() {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 2
+	// 4
+}
 
 func TestFilter(t *testing.T) {
 	t.Run("filter all items", func(t *testing.T) {

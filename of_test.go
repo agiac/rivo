@@ -2,10 +2,28 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExampleOf() {
+	in := Of(1, 2, 3, 4, 5)
+
+	s := in(context.Background(), nil)
+
+	for item := range s {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
 
 func TestOf(t *testing.T) {
 	t.Run("create stream from items", func(t *testing.T) {

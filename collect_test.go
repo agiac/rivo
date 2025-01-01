@@ -2,10 +2,26 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExampleCollect() {
+	s := Of(1, 2, 3, 4, 5)(context.Background(), nil)
+
+	for _, item := range Collect(s) {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
 
 func TestCollect(t *testing.T) {
 	t.Run("collect till end of input stream", func(t *testing.T) {

@@ -2,10 +2,32 @@ package rivo_test
 
 import (
 	"context"
+	"fmt"
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func ExampleMap() {
+	in := Of(1, 2, 3, 4, 5)
+
+	double := Map(func(ctx context.Context, i Item[int]) (int, error) {
+		return i.Val * 2, nil
+	})
+
+	p := Pipe(in, double)
+
+	for _, item := range p.Collect() {
+		fmt.Println(item.Val)
+	}
+
+	// Output:
+	// 2
+	// 4
+	// 6
+	// 8
+	// 10
+}
 
 func TestMap(t *testing.T) {
 	t.Run("map all items", func(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Filter returns a Pipeable that filters the input stream using the given function.
 func Filter[T any](f func(context.Context, Item[T]) (bool, error), opt ...Option) Pipeable[T, T] {
 	o := mustOptions(opt...)
 
