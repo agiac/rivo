@@ -11,11 +11,16 @@ import (
 func ExampleFilter() {
 	in := Of(1, 2, 3, 4, 5)
 
-	f := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+	onlyEven := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+		// Always check for errors
+		if i.Err != nil {
+			return true, i.Err // Propagate the error
+		}
+
 		return i.Val%2 == 0, nil
 	})
 
-	p := Pipe(in, f)
+	p := Pipe(in, onlyEven)
 
 	s := p(context.Background(), nil)
 

@@ -12,6 +12,11 @@ func ExampleMap() {
 	in := Of(1, 2, 3, 4, 5)
 
 	double := Map(func(ctx context.Context, i Item[int]) (int, error) {
+		// Always check for errors
+		if i.Err != nil {
+			return 0, i.Err // Propagate the error
+		}
+
 		return i.Val * 2, nil
 	})
 
