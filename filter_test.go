@@ -9,6 +9,8 @@ import (
 )
 
 func ExampleFilter() {
+	ctx := context.Background()
+
 	in := Of(1, 2, 3, 4, 5)
 
 	onlyEven := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
@@ -22,7 +24,7 @@ func ExampleFilter() {
 
 	p := Pipe(in, onlyEven)
 
-	s := p(context.Background(), nil)
+	s := p(ctx, nil)
 
 	for item := range s {
 		fmt.Println(item.Val)
@@ -35,6 +37,8 @@ func ExampleFilter() {
 
 func TestFilter(t *testing.T) {
 	t.Run("filter all items", func(t *testing.T) {
+		ctx := context.Background()
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			return i.Val%2 == 0, nil
 		}
@@ -43,7 +47,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn)
 
-		got := Collect(Pipe(g, f)(context.Background(), nil))
+		got := Collect(Pipe(g, f)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -54,6 +58,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("filter with error", func(t *testing.T) {
+		ctx := context.Background()
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 3 {
 				return false, assert.AnError
@@ -65,7 +71,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn)
 
-		got := Collect(Pipe(g, f)(context.Background(), nil))
+		got := Collect(Pipe(g, f)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -77,6 +83,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
+		ctx := context.Background()
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Err != nil {
 				return false, i.Err
@@ -84,7 +92,7 @@ func TestFilter(t *testing.T) {
 			return i.Val%2 == 0, nil
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		in := make(chan Item[int])
@@ -108,6 +116,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("with buffer size", func(t *testing.T) {
+		ctx := context.Background()
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			return i.Val%2 == 0, nil
 		}
@@ -123,7 +133,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn, WithBufferSize(3))
 
-		out := f(context.Background(), in)
+		out := f(ctx, in)
 
 		got := Collect(out)
 
@@ -136,6 +146,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("with pool size", func(t *testing.T) {
+		ctx := context.Background()
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			return i.Val%2 == 0, nil
 		}
@@ -144,7 +156,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn, WithPoolSize(3))
 
-		got := Collect(Pipe(in, f)(context.Background(), nil))
+		got := Collect(Pipe(in, f)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -155,6 +167,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("with stop on error", func(t *testing.T) {
+		ctx := context.Background()
+		
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 3 {
 				return false, assert.AnError
@@ -166,7 +180,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn, WithStopOnError(true))
 
-		got := Collect(Pipe(in, f)(context.Background(), nil))
+		got := Collect(Pipe(in, f)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},

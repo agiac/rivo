@@ -9,6 +9,8 @@ import (
 )
 
 func ExamplePipe() {
+	ctx := context.Background()
+
 	a := Of(1, 2, 3, 4, 5)
 
 	b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -17,7 +19,7 @@ func ExamplePipe() {
 
 	p := Pipe(a, b)
 
-	s := p(context.Background(), nil)
+	s := p(ctx, nil)
 
 	for item := range s {
 		fmt.Println(item.Val)
@@ -33,6 +35,8 @@ func ExamplePipe() {
 
 func TestPipe(t *testing.T) {
 	t.Run("pipe all values", func(t *testing.T) {
+		ctx := context.Background()
+
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -41,7 +45,7 @@ func TestPipe(t *testing.T) {
 
 		p := Pipe(a, b)
 
-		got := Collect(p(context.Background(), nil))
+		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -55,7 +59,9 @@ func TestPipe(t *testing.T) {
 	})
 
 	t.Run("context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx := context.Background()
+
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		a := Of(1, 2, 3, 4, 5)
@@ -78,6 +84,8 @@ func TestPipe(t *testing.T) {
 
 func TestPipe2(t *testing.T) {
 	t.Run("pipe all values", func(t *testing.T) {
+		ctx := context.Background()
+
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -86,7 +94,7 @@ func TestPipe2(t *testing.T) {
 
 		p := Pipe2(a, b)
 
-		got := Collect(p(context.Background(), nil))
+		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -100,7 +108,9 @@ func TestPipe2(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx := context.Background()
+
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		a := Of(1, 2, 3, 4, 5)
@@ -123,6 +133,8 @@ func TestPipe2(t *testing.T) {
 
 func TestPipe3(t *testing.T) {
 	t.Run("pipe all values", func(t *testing.T) {
+		ctx := context.Background()
+
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -135,7 +147,7 @@ func TestPipe3(t *testing.T) {
 
 		p := Pipe3(a, b, c)
 
-		got := Collect(p(context.Background(), nil))
+		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -147,7 +159,9 @@ func TestPipe3(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx := context.Background()
+
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		a := Of(1, 2, 3, 4, 5)
@@ -174,6 +188,8 @@ func TestPipe3(t *testing.T) {
 
 func TestPipe4(t *testing.T) {
 	t.Run("pipe all values", func(t *testing.T) {
+		ctx := context.Background()
+
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -190,7 +206,7 @@ func TestPipe4(t *testing.T) {
 
 		p := Pipe4(a, b, c, d)
 
-		got := Collect(p(context.Background(), nil))
+		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 4},
@@ -202,7 +218,9 @@ func TestPipe4(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx := context.Background()
+
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		a := Of(1, 2, 3, 4, 5)
@@ -236,6 +254,8 @@ func TestPipe4(t *testing.T) {
 
 func TestPipe5(t *testing.T) {
 	t.Run("pipe all values", func(t *testing.T) {
+		ctx := context.Background()
+
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -256,7 +276,7 @@ func TestPipe5(t *testing.T) {
 
 		p := Pipe5(a, b, c, d, e)
 
-		got := Collect(p(context.Background(), nil))
+		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 12},
@@ -266,7 +286,9 @@ func TestPipe5(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx := context.Background()
+	
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		a := Of(1, 2, 3, 4, 5)

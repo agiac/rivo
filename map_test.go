@@ -9,6 +9,8 @@ import (
 )
 
 func ExampleMap() {
+	ctx := context.Background()
+
 	in := Of(1, 2, 3, 4, 5)
 
 	double := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -22,7 +24,7 @@ func ExampleMap() {
 
 	p := Pipe(in, double)
 
-	s := p(context.Background(), nil)
+	s := p(ctx, nil)
 
 	for item := range s {
 		fmt.Println(item.Val)
@@ -38,6 +40,8 @@ func ExampleMap() {
 
 func TestMap(t *testing.T) {
 	t.Run("map all items", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			return i.Val + 1, nil
 		}
@@ -46,7 +50,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(context.Background(), nil))
+		got := Collect(Pipe(g, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -60,6 +64,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("map all items with error", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			if i.Val == 3 {
 				return 0, assert.AnError
@@ -71,7 +77,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(context.Background(), nil))
+		got := Collect(Pipe(g, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -85,6 +91,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			if i.Err != nil {
 				return 0, i.Err
@@ -93,7 +101,7 @@ func TestMap(t *testing.T) {
 			return i.Val + 1, nil
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		in := make(chan Item[int])
@@ -117,6 +125,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("with buffer size", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			return i.Val + 1, nil
 		}
@@ -132,7 +142,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, WithBufferSize(3))
 
-		out := m(context.Background(), in)
+		out := m(ctx, in)
 
 		got := Collect(out)
 
@@ -147,6 +157,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("with pool size", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			return i.Val + 1, nil
 		}
@@ -155,7 +167,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, WithPoolSize(3))
 
-		got := Collect(Pipe(in, m)(context.Background(), nil))
+		got := Collect(Pipe(in, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -169,6 +181,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("with stop on error", func(t *testing.T) {
+		ctx := context.Background()
+
 		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
 			if i.Val == 3 {
 				return 0, assert.AnError
@@ -180,7 +194,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, WithStopOnError(true))
 
-		got := Collect(Pipe(in, m)(context.Background(), nil))
+		got := Collect(Pipe(in, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},

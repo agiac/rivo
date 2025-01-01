@@ -10,6 +10,8 @@ import (
 )
 
 func ExampleFromFunc() {
+	ctx := context.Background()
+
 	count := atomic.Int32{}
 
 	genFn := func(ctx context.Context) (int32, error) {
@@ -24,7 +26,7 @@ func ExampleFromFunc() {
 
 	in := FromFunc(genFn)
 
-	s := in(context.Background(), nil)
+	s := in(ctx, nil)
 
 	for item := range s {
 		fmt.Println(item.Val)

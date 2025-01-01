@@ -9,7 +9,9 @@ import (
 )
 
 func ExampleCollect() {
-	s := Of(1, 2, 3, 4, 5)(context.Background(), nil)
+	ctx := context.Background()
+
+	s := Of(1, 2, 3, 4, 5)(ctx, nil)
 
 	for _, item := range Collect(s) {
 		fmt.Println(item.Val)

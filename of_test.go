@@ -9,9 +9,11 @@ import (
 )
 
 func ExampleOf() {
+	ctx := context.Background()
+
 	in := Of(1, 2, 3, 4, 5)
 
-	s := in(context.Background(), nil)
+	s := in(ctx, nil)
 
 	for item := range s {
 		fmt.Println(item.Val)
@@ -27,10 +29,12 @@ func ExampleOf() {
 
 func TestOf(t *testing.T) {
 	t.Run("create stream from items", func(t *testing.T) {
+		ctx := context.Background()
+
 		p := Of(1, 2, 3, 4, 5)
 
-		got := Collect(p(context.Background(), nil))
-		
+		got := Collect(p(ctx, nil))
+
 		want := []Item[int]{
 			{Val: 1},
 			{Val: 2},
