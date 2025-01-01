@@ -5,16 +5,6 @@ import "context"
 // Pipeable is a function that takes a context and a stream and returns a stream. It is the building block of a data pipeline.
 type Pipeable[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
 
-// Collect collects all items from a stream and returns them as a slice.
-func (p Pipeable[T, U]) Collect() []Item[U] {
-	return Collect(p(context.Background(), nil))
-}
-
-// CollectWithContext collects all items from a stream and returns them as a slice. If the context is cancelled, it stops collecting items.
-func (p Pipeable[T, U]) CollectWithContext(ctx context.Context) []Item[U] {
-	return CollectWithContext(ctx, p(ctx, nil))
-}
-
 // Pipe pipes two pipeable functions together. It is a convenience function that calls Pipe2.
 func Pipe[A, B, C any](a Pipeable[A, B], b Pipeable[B, C]) Pipeable[A, C] {
 	return Pipe2(a, b)

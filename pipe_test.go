@@ -17,7 +17,9 @@ func ExamplePipe() {
 
 	p := Pipe(a, b)
 
-	for _, item := range p.Collect() {
+	s := p(context.Background(), nil)
+
+	for item := range s {
 		fmt.Println(item.Val)
 	}
 
@@ -30,14 +32,16 @@ func ExamplePipe() {
 }
 
 func TestPipe(t *testing.T) {
-	t.Run("pipe and collect", func(t *testing.T) {
+	t.Run("pipe all values", func(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
 			return i.Val + 1, nil
 		})
 
-		got := Pipe(a, b).Collect()
+		p := Pipe(a, b)
+
+		got := Collect(p(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -50,29 +54,7 @@ func TestPipe(t *testing.T) {
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("pipe and collect with context", func(t *testing.T) {
-		ctx := context.Background()
-
-		a := Of(1, 2, 3, 4, 5)
-
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		got := Pipe(a, b).CollectWithContext(ctx)
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-			{Val: 6},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("pipe and collect with context and cancel", func(t *testing.T) {
+	t.Run("context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -85,7 +67,9 @@ func TestPipe(t *testing.T) {
 			return i.Val + 1, nil
 		})
 
-		got := Pipe(a, b).CollectWithContext(ctx)
+		p := Pipe(a, b)
+
+		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
@@ -93,14 +77,16 @@ func TestPipe(t *testing.T) {
 }
 
 func TestPipe2(t *testing.T) {
-	t.Run("pipe and collect", func(t *testing.T) {
+	t.Run("pipe all values", func(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
 			return i.Val + 1, nil
 		})
 
-		got := Pipe2(a, b).Collect()
+		p := Pipe2(a, b)
+
+		got := Collect(p(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -113,29 +99,7 @@ func TestPipe2(t *testing.T) {
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("pipe and collect with context", func(t *testing.T) {
-		ctx := context.Background()
-
-		a := Of(1, 2, 3, 4, 5)
-
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		got := Pipe2(a, b).CollectWithContext(ctx)
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-			{Val: 6},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("pipe and collect with context and cancel", func(t *testing.T) {
+	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -148,7 +112,9 @@ func TestPipe2(t *testing.T) {
 			return i.Val + 1, nil
 		})
 
-		got := Pipe2(a, b).CollectWithContext(ctx)
+		p := Pipe2(a, b)
+
+		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
@@ -156,7 +122,7 @@ func TestPipe2(t *testing.T) {
 }
 
 func TestPipe3(t *testing.T) {
-	t.Run("pipe and collect", func(t *testing.T) {
+	t.Run("pipe all values", func(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -167,7 +133,9 @@ func TestPipe3(t *testing.T) {
 			return i.Val%2 == 0, nil
 		})
 
-		got := Pipe3(a, b, c).Collect()
+		p := Pipe3(a, b, c)
+
+		got := Collect(p(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -178,31 +146,7 @@ func TestPipe3(t *testing.T) {
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("pipe and collect with context", func(t *testing.T) {
-		ctx := context.Background()
-
-		a := Of(1, 2, 3, 4, 5)
-
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		got := Pipe3(a, b, c).CollectWithContext(ctx)
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 4},
-			{Val: 6},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("pipe and collect with context and cancel", func(t *testing.T) {
+	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -219,7 +163,9 @@ func TestPipe3(t *testing.T) {
 			return i.Val%2 == 0, nil
 		})
 
-		got := Pipe3(a, b, c).CollectWithContext(ctx)
+		p := Pipe3(a, b, c)
+
+		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
@@ -227,7 +173,7 @@ func TestPipe3(t *testing.T) {
 }
 
 func TestPipe4(t *testing.T) {
-	t.Run("pipe and collect", func(t *testing.T) {
+	t.Run("pipe all values", func(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -242,7 +188,9 @@ func TestPipe4(t *testing.T) {
 			return i.Val * 2, nil
 		})
 
-		got := Pipe4(a, b, c, d).Collect()
+		p := Pipe4(a, b, c, d)
+
+		got := Collect(p(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 4},
@@ -253,35 +201,7 @@ func TestPipe4(t *testing.T) {
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("pipe and collect with context", func(t *testing.T) {
-		ctx := context.Background()
-
-		a := Of(1, 2, 3, 4, 5)
-
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val * 2, nil
-		})
-
-		got := Pipe4(a, b, c, d).CollectWithContext(ctx)
-
-		want := []Item[int]{
-			{Val: 4},
-			{Val: 8},
-			{Val: 12},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("pipe and collect with context and cancel", func(t *testing.T) {
+	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -299,10 +219,15 @@ func TestPipe4(t *testing.T) {
 		})
 
 		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
+			if i.Err != nil {
+				return 0, i.Err
+			}
 			return i.Val * 2, nil
 		})
 
-		got := Pipe4(a, b, c, d).CollectWithContext(ctx)
+		p := Pipe4(a, b, c, d)
+
+		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
@@ -310,7 +235,7 @@ func TestPipe4(t *testing.T) {
 }
 
 func TestPipe5(t *testing.T) {
-	t.Run("pipe and collect", func(t *testing.T) {
+	t.Run("pipe all values", func(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
@@ -329,7 +254,9 @@ func TestPipe5(t *testing.T) {
 			return i.Val%3 == 0, nil
 		})
 
-		got := Pipe5(a, b, c, d, e).Collect()
+		p := Pipe5(a, b, c, d, e)
+
+		got := Collect(p(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 12},
@@ -338,37 +265,7 @@ func TestPipe5(t *testing.T) {
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("pipe and collect with context", func(t *testing.T) {
-		ctx := context.Background()
-
-		a := Of(1, 2, 3, 4, 5)
-
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val * 2, nil
-		})
-
-		e := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%3 == 0, nil
-		})
-
-		got := Pipe5(a, b, c, d, e).CollectWithContext(ctx)
-
-		want := []Item[int]{
-			{Val: 12},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("pipe and collect with context and cancel", func(t *testing.T) {
+	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -386,6 +283,9 @@ func TestPipe5(t *testing.T) {
 		})
 
 		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
+			if i.Err != nil {
+				return 0, i.Err
+			}
 			return i.Val * 2, nil
 		})
 
@@ -393,7 +293,9 @@ func TestPipe5(t *testing.T) {
 			return i.Val%3 == 0, nil
 		})
 
-		got := Pipe5(a, b, c, d, e).CollectWithContext(ctx)
+		p := Pipe5(a, b, c, d, e)
+
+		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 2)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)

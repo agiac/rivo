@@ -52,7 +52,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn)
 
-		got := Pipe(Of(struct{}{}), f).CollectWithContext(ctx)
+		got := Collect(f(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 1},
@@ -81,7 +81,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn)
 
-		got := Pipe(Of(struct{}{}), f).CollectWithContext(ctx)
+		got := Collect(f(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 1},
@@ -107,7 +107,9 @@ func TestFromFunc(t *testing.T) {
 			return count, nil
 		}
 
-		got := FromFunc(genFn).CollectWithContext(ctx)
+		f := FromFunc(genFn)
+
+		got := Collect(f(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
@@ -162,7 +164,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn, WithPoolSize(3))
 
-		got := Pipe(Of(struct{}{}), f).CollectWithContext(ctx)
+		got := Collect(f(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 1},
@@ -191,7 +193,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn, WithStopOnError(true))
 
-		got := Pipe(Of(struct{}{}), f).CollectWithContext(ctx)
+		got := Collect(f(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 1},

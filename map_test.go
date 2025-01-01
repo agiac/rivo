@@ -17,7 +17,9 @@ func ExampleMap() {
 
 	p := Pipe(in, double)
 
-	for _, item := range p.Collect() {
+	s := p(context.Background(), nil)
+
+	for item := range s {
 		fmt.Println(item.Val)
 	}
 
@@ -39,7 +41,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Pipe(g, m).Collect()
+		got := Collect(Pipe(g, m)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -64,7 +66,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Pipe(g, m).Collect()
+		got := Collect(Pipe(g, m)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -148,7 +150,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, WithPoolSize(3))
 
-		got := Pipe(in, m).Collect()
+		got := Collect(Pipe(in, m)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -173,7 +175,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, WithStopOnError(true))
 
-		got := Pipe(in, m).Collect()
+		got := Collect(Pipe(in, m)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},

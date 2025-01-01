@@ -17,7 +17,9 @@ func ExampleFilter() {
 
 	p := Pipe(in, f)
 
-	for _, item := range p.Collect() {
+	s := p(context.Background(), nil)
+
+	for item := range s {
 		fmt.Println(item.Val)
 	}
 
@@ -36,7 +38,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn)
 
-		got := Pipe(g, f).Collect()
+		got := Collect(Pipe(g, f)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -58,7 +60,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn)
 
-		got := Pipe(g, f).Collect()
+		got := Collect(Pipe(g, f)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -137,7 +139,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn, WithPoolSize(3))
 
-		got := Pipe(in, f).Collect()
+		got := Collect(Pipe(in, f)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -159,7 +161,7 @@ func TestFilter(t *testing.T) {
 
 		f := Filter(filterFn, WithStopOnError(true))
 
-		got := Pipe(in, f).Collect()
+		got := Collect(Pipe(in, f)(context.Background(), nil))
 
 		want := []Item[int]{
 			{Val: 2},
