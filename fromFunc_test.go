@@ -107,7 +107,7 @@ func TestFromFunc(t *testing.T) {
 			return count, nil
 		}
 
-		got := FromFunc(genFn).CollectWithContext(ctx)
+		got := CollectWithContext(ctx, FromFunc(genFn)(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
 		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
