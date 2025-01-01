@@ -27,7 +27,7 @@ func ExampleOf() {
 
 func TestOf(t *testing.T) {
 	t.Run("create stream from items", func(t *testing.T) {
-		got := Collect(Of(1, 2, 3, 4, 5)(context.Background(), nil))
+		got := Of(1, 2, 3, 4, 5).Collect()
 
 		want := []Item[int]{
 			{Val: 1},
