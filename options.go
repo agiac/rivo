@@ -50,7 +50,7 @@ func mustOptions(opts ...Option) options {
 // Option is a configuration option for a Pipeable.
 type Option func(*options)
 
-// WithPoolSize sets the number of goroutines that will be used to process items concurrently. The default is 1.
+// WithPoolSize sets the number of goroutines that will be used to process items. The default is 1.
 func WithPoolSize(size int) Option {
 	return func(o *options) {
 		o.poolSize = size
