@@ -1,4 +1,3 @@
-// Package rivo is a data pipeline library that provides a simple and flexible way to build data pipelines in Go.
 package rivo
 
 // Item represents a single item in a data stream. It contains a value of type T and an optional error.

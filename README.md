@@ -9,7 +9,7 @@
 2. [ReactiveX](https://reactivex.io/), in particular the [Go](https://github.com/ReactiveX/RxGo) and [JS](https://github.com/ReactiveX/rxjs) libraries;
 
 Compared to these sources, `rivo` aims to provide better type safety (both "Concurrency in Go" and RxGo were written in a pre-generics era and make a heavy use of `interface{}`) 
-and a more intuitive API and developer experience.
+and a more intuitive API and developer experience (Rx is very powerful, but can be overwhelming for newcomers).
 
 ## Getting started
 
@@ -21,9 +21,9 @@ and a more intuitive API and developer experience.
 
 ### Basic concepts
 
-`rivo` has 3 main building blocks: **items**, **streams** and **pipepeables**.
+`rivo` has 3 main types, which are the building blocks of the library: `Item`, `Stream` and `Pipeable`.
 
-An `Item` is a basic struct, which contains a value and an optional error. Just like errors are returned next to the result 
+`Item` is a struct which contains a value and an optional error. Just like errors are returned next to the result
 of a function in synchronous code, they should be passed along into asynchronous code and handled where more appropriate.
 
 ```go
@@ -33,14 +33,14 @@ type Item[T any] struct {
 }
 ```
 
-A `Stream` is a read only channel of items.
+`Stream` is a read only channel of items. As the name suggests, it represents a stream of data.
 
 ```go
 type Stream[T any] <-chan Item[T]
 ```
 
-A `Pipeable` is a function that takes a context and a stream of one type and returns a stream of the same or a different type. 
-It allows for easy composition of data pipelines via pipe functions.
+`Pipeable` is a function that takes a `context.Context` and a `Stream` of one type and returns a `Stream` of the same or a different type.
+Pipeables can be composed together using the one of the `Pipe` functions.
 
 ```go
 type Pipeable[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
@@ -94,6 +94,8 @@ func main() {
 	// 4
 }
 ```
+
+### Optional parameters
 
 Many pipeables accepts a common set of optional parameters. These can be provided via functional options.
 
@@ -155,6 +157,23 @@ The currently available options are:
 
 More examples can be found in the [examples](./examples) folder.
 
+### Error handling
+
+TODO
+
+## Pipeables
+
+`rivo` comes with a set of built-in pipeables. Here's a list of the currently available ones:
+
+- `Of`: returns a pipeable which returns a stream that will emit the provided values;
+- `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
+- `Filter`: filters the input stream using the given function;
+- `Map`: maps the input stream using the given function;
+
+## Contributing
+
+Contributions are welcome! If you have an idea for a new pipeable, a bug to report or a feature request, please open an issue or a pull request.
+
 ## Roadmap
 
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
@@ -165,6 +184,7 @@ More examples can be found in the [examples](./examples) folder.
   - [ ] AWS
   - [ ] ...
 - [ ] Add more examples
+- [ ] Error handling section in the README
 
 ## License
 
