@@ -169,6 +169,7 @@ TODO
 - `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
 - `Filter`: filters the input stream using the given function;
 - `Map`: maps the input stream using the given function;
+- `Do`: performs a side effect for each item in the input stream;
 
 ## Contributing
 
