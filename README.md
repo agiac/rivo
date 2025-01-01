@@ -8,7 +8,7 @@
 1. The book ["Concurrency in Go"](https://www.amazon.com/Concurrency-Go-Tools-Techniques-Developers/dp/1491941197);
 2. [ReactiveX](https://reactivex.io/), in particular the [Go](https://github.com/ReactiveX/RxGo) and [JS](https://github.com/ReactiveX/rxjs) libraries;
 
-Compared to these sources, `rivo` aims to provide better type safety (both "Concurrency in Go" and RxGo were written in a pre-generics era) 
+Compared to these sources, `rivo` aims to provide better type safety (both "Concurrency in Go" and RxGo were written in a pre-generics era and make a heavy use of `interface{}`) 
 and a more intuitive API and developer experience.
 
 ## Getting started
@@ -60,10 +60,10 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// `Of` is a factory function which returs a pipeable which returns a stream that will emit the provided values
+	// `Of` is a factory function which returns a pipeable which returns a stream that will emit the provided values
 	in := rivo.Of(1, 2, 3, 4, 5)
 
-	// `Filter` returns a Pipeable that filters the input stream using the given function.
+	// `Filter` returns a pipeable that filters the input stream using the given function.
 	onlyEven := rivo.Filter(func(ctx context.Context, i rivo.Item[int]) (bool, error) {
 		// Always check for errors
 		if i.Err != nil {
@@ -73,11 +73,11 @@ func main() {
 		return i.Val%2 == 0, nil
 	})
 
-	// `Pipe` composes pipeables togheter, returnin a new pipeable
+	// `Pipe` composes pipeables together, returning a new pipeable
 	p := rivo.Pipe(in, onlyEven)
 
 	// By passing a context and an input channel to our pipeable, we can get the output stream.
-	// Since our first pipeable `in` does not depend on a input stream, we can pass a nil channel.
+	// Since our first pipeable `in` does not depend on an input stream, we pass a nil channel.
 	s := p(ctx, nil)
 
 	// Consume the result stream
@@ -154,6 +154,22 @@ The currently available options are:
 - `WithStopOnError(bool)`: if true, the pipeable will stop processing items when an error is encountered. Default is false.
 
 More examples can be found in the [examples](./examples) folder.
+
+## Roadmap
+
+- [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
+  - [ ] IO
+  - [ ] Error handling
+  - [ ] Time-based
+  - [ ] SQL
+  - [ ] AWS
+  - [ ] ...
+- [ ] Add more examples
+
+## License
+
+`rivo` is licensed under the MIT license. See the [LICENSE](./LICENSE) file for details.
+
 
 
 
