@@ -94,10 +94,20 @@ func main() {
 	// 4
 }
 ```
+## Pipeable factories
+
+`rivo` comes with a set of built-in pipeable factories. Here's a list of the currently available ones:
+
+- `Of`: returns a pipeable which returns a stream that will emit the provided values;
+- `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
+- `Filter`: returns a pipeable which filters the input stream using the given function;
+- `Map`: returns a pipeable which maps the input stream using the given function;
+- `Do`: returns a pipeable which performs a side effect for each item in the input stream;
+- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
 
 ### Optional parameters
 
-Many pipeables accepts a common set of optional parameters. These can be provided via functional options.
+Many pipeable factories accepts a common set of optional parameters. These can be provided via functional options.
 
 ```go
 package main
@@ -155,35 +165,40 @@ The currently available options are:
 - `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
 - `WithStopOnError(bool)`: if true, the pipeable will stop processing items when an error is encountered. Default is false.
 
-More examples can be found in the [examples](./examples) folder.
+## Utilities
 
-### Error handling
+`rivo` also comes with a set of utilities which cannot be expressed as pipeables but can be useful when working with streams:
+
+- `OrDone`: returns a channel which will be closed when the provided context is done;
+- `Tee` and `TeeN`: returns n streams that each receive a copy of each item from the input stream;
+
+
+## Error handling
 
 TODO
 
-## Pipeables
+## Examples
 
-`rivo` comes with a set of built-in pipeables. Here's a list of the currently available ones:
+More examples can be found in the [examples](./examples) folder.
 
-- `Of`: returns a pipeable which returns a stream that will emit the provided values;
-- `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
-- `Filter`: filters the input stream using the given function;
-- `Map`: maps the input stream using the given function;
-- `Do`: performs a side effect for each item in the input stream;
+---
 
 ## Contributing
 
-Contributions are welcome! If you have an idea for a new pipeable, a bug to report or a feature request, please open an issue or a pull request.
+Contributions are welcome! If you have any ideas, suggestions or bug reports, please open an issue or a pull request.
 
 ## Roadmap
 
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
+  - [ ] Batch
   - [ ] IO
   - [ ] Error handling
   - [ ] Time-based
   - [ ] SQL
   - [ ] AWS
   - [ ] ...
+- [ ] Add more utilities
+  - [ ] Merge
 - [ ] Add more examples
 - [ ] Error handling section in the README
 

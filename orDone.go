@@ -2,7 +2,7 @@ package rivo
 
 import "context"
 
-// OrDone is a convenience function that returns a channel that will be closed when the context is done.
+// OrDone is a utility function that returns a channel that will be closed when the context is done.
 func OrDone[T any](ctx context.Context, in Stream[T]) Stream[T] {
 	out := make(chan Item[T])
 
