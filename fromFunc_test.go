@@ -205,4 +205,36 @@ func TestFromFunc(t *testing.T) {
 
 		assert.Equal(t, want, got)
 	})
+
+	t.Run("with on before close", func(t *testing.T) {
+		ctx := context.Background()
+		count := 0
+		genFn := func(ctx context.Context) (int, error) {
+			count++
+			if count > 5 {
+				return 0, ErrEOS
+			}
+			return count, nil
+		}
+
+		beforeCloseCalled := false
+
+		f := FromFunc(genFn, WithOnBeforeClose(func(ctx context.Context) error {
+			beforeCloseCalled = true
+			return nil
+		}))
+
+		got := Collect(f(ctx, nil))
+
+		want := []Item[int]{
+			{Val: 1},
+			{Val: 2},
+			{Val: 3},
+			{Val: 4},
+			{Val: 5},
+		}
+
+		assert.Equal(t, want, got)
+		assert.True(t, beforeCloseCalled)
+	})
 }

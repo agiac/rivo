@@ -168,7 +168,7 @@ func TestFilter(t *testing.T) {
 
 	t.Run("with stop on error", func(t *testing.T) {
 		ctx := context.Background()
-		
+
 		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 3 {
 				return false, assert.AnError
@@ -188,5 +188,31 @@ func TestFilter(t *testing.T) {
 		}
 
 		assert.Equal(t, want, got)
+	})
+
+	t.Run("with on before close", func(t *testing.T) {
+		ctx := context.Background()
+
+		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
+			return i.Val%2 == 0, nil
+		}
+
+		g := Of(1, 2, 3, 4, 5)
+
+		onBeforeCloseCalled := false
+		f := Filter(filterFn, WithOnBeforeClose(func(ctx context.Context) error {
+			onBeforeCloseCalled = true
+			return nil
+		}))
+
+		got := Collect(Pipe(g, f)(ctx, nil))
+
+		want := []Item[int]{
+			{Val: 2},
+			{Val: 4},
+		}
+
+		assert.Equal(t, want, got)
+		assert.True(t, onBeforeCloseCalled)
 	})
 }

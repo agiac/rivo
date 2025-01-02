@@ -96,7 +96,7 @@ func main() {
 ```
 ## Pipeable factories
 
-`rivo` comes with a set of built-in pipeable factories. Here's a list of the currently available ones:
+`rivo` comes with a set of built-in pipeable factories. The core ones are:
 
 - `Of`: returns a pipeable which returns a stream that will emit the provided values;
 - `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
@@ -104,6 +104,18 @@ func main() {
 - `Map`: returns a pipeable which maps the input stream using the given function;
 - `Do`: returns a pipeable which performs a side effect for each item in the input stream;
 - `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
+
+Besides these, the directories of the library contain more specialized pipeables factories.
+
+### Package `rivo/rivo_io`
+
+- `FromReader`: returns a pipeable which reads from the provided `io.Reader` and emits the read bytes;
+- `ToWriter`: returns a pipeable which writes the input stream to the provided `io.Writer`;
+
+### Package `rivo/rivo_bufio`
+
+- `FromScanner`: returns a pipeable which reads from the provided `bufio.Scanner` and emits the scanned items;
+- `ToScanner`: returns a pipeable which writes the input stream to the provided `bufio.Writer`;
 
 ### Optional parameters
 
@@ -164,6 +176,7 @@ The currently available options are:
 - `WithPoolSize(int)`: sets the number of goroutines that will be used to process items. Default is 1.
 - `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
 - `WithStopOnError(bool)`: if true, the pipeable will stop processing items when an error is encountered. Default is false.
+- `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
 
 ## Utilities
 
@@ -192,7 +205,7 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 - [ ] Generator and Sync type aliases, once bug in Go 1.23 is fixed
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Batch
-  - [ ] IO
+  - [ ] CSV
   - [ ] Error handling
   - [ ] Time-based
   - [ ] SQL

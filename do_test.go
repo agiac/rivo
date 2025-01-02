@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/agiac/rivo"
+	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
@@ -13,17 +13,17 @@ import (
 func ExampleDo() {
 	ctx := context.Background()
 
-	in := make(chan rivo.Item[int])
+	in := make(chan Item[int])
 	go func() {
 		defer close(in)
-		in <- rivo.Item[int]{Val: 1}
-		in <- rivo.Item[int]{Val: 2}
-		in <- rivo.Item[int]{Err: errors.New("error 1")}
-		in <- rivo.Item[int]{Val: 4}
-		in <- rivo.Item[int]{Err: errors.New("error 2")}
+		in <- Item[int]{Val: 1}
+		in <- Item[int]{Val: 2}
+		in <- Item[int]{Err: errors.New("error 1")}
+		in <- Item[int]{Val: 4}
+		in <- Item[int]{Err: errors.New("error 2")}
 	}()
 
-	d := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+	d := Do(func(ctx context.Context, i Item[int]) {
 		if i.Err != nil {
 			fmt.Printf("ERROR: %v\n", i.Err)
 		}
@@ -42,13 +42,13 @@ func TestDo(t *testing.T) {
 
 		count := 0
 
-		g := rivo.Of(1, 2, 3, 4, 5)
+		g := Of(1, 2, 3, 4, 5)
 
-		d := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		d := Do(func(ctx context.Context, i Item[int]) {
 			count++
 		})
 
-		p := rivo.Pipe(g, d)
+		p := Pipe(g, d)
 
 		<-p(ctx, nil)
 
@@ -61,16 +61,16 @@ func TestDo(t *testing.T) {
 
 		count := 0
 
-		g := rivo.Of(1, 2, 3, 4, 5)
+		g := Of(1, 2, 3, 4, 5)
 
-		d := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		d := Do(func(ctx context.Context, i Item[int]) {
 			count++
 			if i.Val == 3 {
 				cancel()
 			}
 		})
 
-		p := rivo.Pipe(g, d)
+		p := Pipe(g, d)
 
 		<-p(ctx, nil)
 
@@ -82,16 +82,37 @@ func TestDo(t *testing.T) {
 
 		count := atomic.Int32{}
 
-		g := rivo.Of[int32](1, 2, 3, 4, 5)
+		g := Of[int32](1, 2, 3, 4, 5)
 
-		d := rivo.Do(func(ctx context.Context, i rivo.Item[int32]) {
+		d := Do(func(ctx context.Context, i Item[int32]) {
 			count.Add(1)
-		}, rivo.WithPoolSize(3))
+		}, WithPoolSize(3))
 
-		p := rivo.Pipe(g, d)
+		p := Pipe(g, d)
 
 		<-p(ctx, nil)
 
 		assert.Equal(t, int32(5), count.Load())
+	})
+
+	t.Run("with on before close", func(t *testing.T) {
+		ctx := context.Background()
+
+		count := atomic.Int32{}
+
+		g := Of[int32](1, 2, 3, 4, 5)
+
+		d := Do(func(ctx context.Context, i Item[int32]) {
+			count.Add(1)
+		}, WithOnBeforeClose(func(ctx context.Context) error {
+			count.Add(1)
+			return nil
+		}))
+
+		p := Pipe(g, d)
+
+		<-p(ctx, nil)
+
+		assert.Equal(t, int32(6), count.Load())
 	})
 }

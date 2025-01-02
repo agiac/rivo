@@ -17,6 +17,7 @@ func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) P
 
 		go func() {
 			defer close(out)
+			defer beforeClose(ctx, out, o)
 
 			for range o.poolSize {
 				go func() {

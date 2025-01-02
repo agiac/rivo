@@ -17,6 +17,7 @@ func Filter[T any](f func(context.Context, Item[T]) (bool, error), opt ...Option
 
 		go func() {
 			defer close(out)
+			defer beforeClose(ctx, out, o)
 
 			for range o.poolSize {
 				go func() {

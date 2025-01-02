@@ -7,7 +7,6 @@ import (
 
 // Do returns a Pipeable that applies the given function to each item in the stream.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-// It can be used to perform side effects on each item in the stream, e.g. logging or error handling.
 func Do[T any](f func(ctx context.Context, i Item[T]), opt ...Option) Pipeable[T, struct{}] {
 	o := mustOptions(opt...)
 
@@ -16,6 +15,7 @@ func Do[T any](f func(ctx context.Context, i Item[T]), opt ...Option) Pipeable[T
 
 		go func() {
 			defer close(out)
+			defer beforeClose(ctx, out, o)
 
 			wg := sync.WaitGroup{}
 			wg.Add(o.poolSize)

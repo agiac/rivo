@@ -204,4 +204,52 @@ func TestMap(t *testing.T) {
 
 		assert.Equal(t, want, got)
 	})
+
+	t.Run("with on before close", func(t *testing.T) {
+		ctx := context.Background()
+
+		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
+			return i.Val + 1, nil
+		}
+
+		in := Of(1, 2, 3, 4, 5)
+
+		beforeCloseCalled := false
+
+		m := Map(mapFn, WithOnBeforeClose(func(ctx context.Context) error {
+			beforeCloseCalled = true
+			return nil
+		}))
+
+		_ = Collect(Pipe(in, m)(ctx, nil))
+
+		assert.True(t, beforeCloseCalled)
+	})
+
+	t.Run("with on before close error", func(t *testing.T) {
+		ctx := context.Background()
+
+		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
+			return i.Val + 1, nil
+		}
+
+		in := Of(1, 2, 3, 4, 5)
+
+		m := Map(mapFn, WithOnBeforeClose(func(ctx context.Context) error {
+			return assert.AnError
+		}))
+
+		got := Collect(Pipe(in, m)(ctx, nil))
+
+		want := []Item[int]{
+			{Val: 2},
+			{Val: 3},
+			{Val: 4},
+			{Val: 5},
+			{Val: 6},
+			{Err: assert.AnError},
+		}
+
+		assert.Equal(t, want, got)
+	})
 }

@@ -1,20 +1,23 @@
 package rivo
 
 import (
+	"context"
 	"fmt"
 )
 
 // options contains common configuration options for a Pipeable.
 type options struct {
-	poolSize    int
-	bufferSize  int
-	stopOnError bool
+	poolSize      int
+	bufferSize    int
+	stopOnError   bool
+	onBeforeClose func(context.Context) error
 }
 
 var defaultOptions = options{
-	poolSize:    1,
-	bufferSize:  0,
-	stopOnError: false,
+	poolSize:      1,
+	bufferSize:    0,
+	stopOnError:   false,
+	onBeforeClose: nil,
 }
 
 func (o options) apply(opts ...Option) options {
@@ -68,5 +71,35 @@ func WithBufferSize(size int) Option {
 func WithStopOnError(stop bool) Option {
 	return func(o *options) {
 		o.stopOnError = stop
+	}
+}
+
+// WithOnBeforeClose sets a function that will be called before the Pipeable output channel is closed.
+func WithOnBeforeClose(fn func(context.Context) error) Option {
+	return func(o *options) {
+		// If there is already a function set, chain the new function with the existing one.
+		if o.onBeforeClose != nil {
+			existingFn := o.onBeforeClose
+			o.onBeforeClose = func(ctx context.Context) error {
+				if err := existingFn(ctx); err != nil {
+					return err
+				}
+
+				return fn(ctx)
+			}
+		} else {
+			o.onBeforeClose = fn
+		}
+	}
+}
+
+func beforeClose[T any](ctx context.Context, out chan<- Item[T], o options) {
+	if o.onBeforeClose == nil {
+		return
+	}
+
+	err := o.onBeforeClose(ctx)
+	if err != nil {
+		out <- Item[T]{Err: err}
 	}
 }

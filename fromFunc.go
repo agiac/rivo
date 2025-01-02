@@ -16,15 +16,9 @@ func FromFunc[T any](f func(ctx context.Context) (T, error), options ...Option) 
 	return func(ctx context.Context, stream Stream[struct{}]) Stream[T] {
 		out := make(chan Item[T], o.bufferSize)
 
-		//onFinish := func() {
-		//	if err := o.onFinish(ctx); err != nil {
-		//		out <- Item[T]{Err: err}
-		//	}
-		//}
-
 		go func() {
 			defer close(out)
-			//defer onFinish()
+			defer beforeClose(ctx, out, o)
 
 			wg := sync.WaitGroup{}
 			wg.Add(o.poolSize)
