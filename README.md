@@ -122,53 +122,12 @@ Besides these, the directories of the library contain more specialized pipeables
 Many pipeable factories accepts a common set of optional parameters. These can be provided via functional options.
 
 ```go
-package main
-
-import (
-	"context"
-	"errors"
-	"fmt"
-	"github.com/agiac/rivo"
-)
-
-func main() {
-	ctx := context.Background()
-
-	in := rivo.Of(1, 2, 3, 4, 5)
-
-	doubleFn := func(ctx context.Context, i rivo.Item[int]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err
-		}
-
-		// Simulate an error
-		if i.Val == 3 {
-			return 0, errors.New("some error")
-		}
-
-		return i.Val * 2, nil
-	}
-
-	// `Pass additional options to the pipeable
-	double := rivo.Map(doubleFn, rivo.WithBufferSize(1), rivo.WithStopOnError(true))
-
-	p := rivo.Pipe(in, double)
-
-	s := p(ctx, nil)
-
-	for item := range s {
-		if item.Err != nil {
-			fmt.Printf("ERROR: %v\n", item.Err)
-			continue
-		}
-		fmt.Println(item.Val)
-	}
-
-	// Output:
-	// 2
-	// 4
-	// ERROR: some error
-}
+  double := rivo.Map(
+	  func(ctx context.Context, i rivo.Item[int]) (int, error) { return i.Val * 2, nil  },
+	  // `Pass additional options to the pipeable
+	  rivo.WithBufferSize(1), 
+	  rivo.WithPoolSize(runtime.NumCPU()), 
+	  )
 ```
 
 The currently available options are:
