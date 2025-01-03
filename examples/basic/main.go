@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/agiac/rivo"
 )
 
@@ -12,7 +13,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// `Of` is a factory function which returns a pipeable which returns a stream that will emit the provided values
+	// `Of` returns a generator which returns a stream that will emit the provided values
 	in := rivo.Of(1, 2, 3, 4, 5)
 
 	// `Filter` returns a pipeable that filters the input stream using the given function.
@@ -25,23 +26,24 @@ func main() {
 		return i.Val%2 == 0, nil
 	})
 
+	log := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		if i.Err != nil {
+			fmt.Printf("ERROR: %v\n", i.Err)
+			return
+		}
+
+		fmt.Println(i.Val)
+	})
+
 	// `Pipe` composes pipeables together, returning a new pipeable
-	p := rivo.Pipe(in, onlyEven)
+	p := rivo.Pipe3(in, onlyEven, log)
 
 	// By passing a context and an input channel to our pipeable, we can get the output stream.
-	// Since our first pipeable `in` does not depend on an input stream, we can pass a nil channel.
-	s := p(ctx, nil)
+	// Since our first pipeable `in` is a generator and does not depend on an input stream, we can pass a nil channel.
+	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
+	<-p(ctx, nil)
 
-	// Consume the result stream
-	for item := range s {
-		if item.Err != nil {
-			fmt.Printf("ERROR: %v\n", item.Err)
-			continue
-		}
-		fmt.Println(item.Val)
-	}
-
-	// Output:
+	// Expected output:
 	// 2
 	// 4
 }

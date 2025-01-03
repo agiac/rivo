@@ -3,10 +3,11 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
-	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
+
+	. "github.com/agiac/rivo"
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleFromFunc() {
@@ -130,16 +131,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn, WithBufferSize(3))
 
-		in := make(chan Item[struct{}])
-
-		go func() {
-			defer close(in)
-			in <- Item[struct{}]{}
-			in <- Item[struct{}]{}
-			in <- Item[struct{}]{}
-		}()
-
-		out := f(ctx, in)
+		out := f(ctx, nil)
 
 		got := Collect(out)
 

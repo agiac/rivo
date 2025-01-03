@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// Filter returns a Pipeable that filters the input stream using the given function.
-func Filter[T any](f func(context.Context, Item[T]) (bool, error), opt ...Option) Pipeable[T, T] {
+// Filter returns a Transformer that filters the input stream using the given function.
+func Filter[T any](f func(context.Context, Item[T]) (bool, error), opt ...Option) Transformer[T, T] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[T] {

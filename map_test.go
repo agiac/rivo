@@ -3,9 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func ExampleMap() {

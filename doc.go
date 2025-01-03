@@ -9,4 +9,8 @@
 //
 // Pipeable is a function that takes a context.Context and a Stream of one type and returns a Stream of the same or a different type.
 // Pipeables can be composed together using the one of the Pipe functions.
+// Pipeables are divided in three categories: generators, sinks and transformers.
+//   - Generator is a pipeable that does not read from its input stream. It starts a new stream from scratch.
+//   - Sync is a pipeable function that does not emit any items. It is used at the end of a pipeline.
+//   - Transformer is a pipeable that reads from its input stream and emits items to its output stream.
 package rivo

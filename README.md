@@ -13,6 +13,17 @@ and a more intuitive API and developer experience (Rx is very powerful, but can 
 
 ## Getting started
 
+### Prerequisites
+
+`rivo` requires Go 1.24 or later. 
+
+For the time being you'll need to use the release candidate version of Go 1.24, which can be installed with:
+
+```shell
+  go install golang.org/dl/go1.24rc1@latest
+  go1.24rc1 download
+```
+
 ### Installation
 
 ```shell
@@ -46,6 +57,11 @@ Pipeables can be composed together using the one of the `Pipe` functions.
 type Pipeable[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
 ```
 
+Pipeables are divided in three categories: generators, sinks and transformers.
+- `Generator` is a pipeable that does not read from its input stream. It starts a new stream from scratch.
+- `Sync` is a pipeable function that does not emit any items. It is used at the end of a pipeline.
+- `Transformer` is a pipeable that reads from its input stream and emits items to its output stream.
+
 Here's a basic example:
 
 ```go
@@ -60,7 +76,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// `Of` is a factory function which returns a pipeable which returns a stream that will emit the provided values
+	// `Of` returns a generator which returns a stream that will emit the provided values
 	in := rivo.Of(1, 2, 3, 4, 5)
 
 	// `Filter` returns a pipeable that filters the input stream using the given function.
@@ -73,38 +89,45 @@ func main() {
 		return i.Val%2 == 0, nil
 	})
 
+	log := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		if i.Err != nil {
+			fmt.Printf("ERROR: %v\n", i.Err)
+			return
+		}
+
+		fmt.Println(i.Val)
+	})
+
 	// `Pipe` composes pipeables together, returning a new pipeable
-	p := rivo.Pipe(in, onlyEven)
+	p := rivo.Pipe3(in, onlyEven, log)
 
 	// By passing a context and an input channel to our pipeable, we can get the output stream.
-	// Since our first pipeable `in` does not depend on an input stream, we pass a nil channel.
-	s := p(ctx, nil)
+	// Since our first pipeable `in` is a generator and does not depend on an input stream, we can pass a nil channel.
+	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
+	<-p(ctx, nil)
 
-	// Consume the result stream
-	for item := range s {
-		if item.Err != nil {
-			fmt.Printf("ERROR: %v\n", item.Err)
-			continue
-		}
-		fmt.Println(item.Val)
-	}
-
-	// Output:
+	// Expected output:
 	// 2
 	// 4
 }
 ```
+
 ## Pipeable factories
 
-`rivo` comes with a set of built-in pipeable factories. The core ones are:
+`rivo` comes with a set of built-in pipeable factories.
 
+### Generators
 - `Of`: returns a pipeable which returns a stream that will emit the provided values;
 - `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
+
+### Sinks
+- `Do`: returns a pipeable which performs a side effect for each item in the input stream;
+- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
+
+### Transformers
 - `Filter`: returns a pipeable which filters the input stream using the given function;
 - `Map`: returns a pipeable which maps the input stream using the given function;
 - `ForEach`: returns a pipeable which applies the given function to each item in the input stream and forwards only the errors;
-- `Do`: returns a pipeable which performs a side effect for each item in the input stream;
-- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
 
 Besides these, the directories of the library contain more specialized pipeables factories.
 

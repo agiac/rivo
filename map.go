@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// Map returns a Pipeable that applies a function to each item from the input stream.
-func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) Pipeable[T, U] {
+// Map returns a Transformer that applies a function to each item from the input stream.
+func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) Transformer[T, U] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[U] {

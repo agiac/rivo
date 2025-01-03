@@ -5,25 +5,25 @@ import (
 	"sync"
 )
 
-// Parallel returns a Pipeable that applies the given pipeables to the input stream in parallel.
+// Parallel returns a Sync that applies the given syncs to the input stream in parallel.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Parallel[A any](pipeables ...Pipeable[A, struct{}]) Pipeable[A, struct{}] {
-	return func(ctx context.Context, in Stream[A]) Stream[struct{}] {
-		out := make(chan Item[struct{}])
+func Parallel[A any](pipeables ...Sync[A]) Sync[A] {
+	return func(ctx context.Context, in Stream[A]) Stream[None] {
+		out := make(chan Item[None])
 
 		go func() {
 			defer close(out)
 
-			ins := TeeN(ctx, in, len(pipeables))
+			ins := TeeN(context.Background(), in, len(pipeables))
 
 			wg := sync.WaitGroup{}
 			wg.Add(len(pipeables))
 			defer wg.Wait()
 
 			for i, pipeable := range pipeables {
-				go func(i int, p Pipeable[A, struct{}]) {
+				go func(i int, p Sync[A]) {
 					defer wg.Done()
-					<-OrDone(ctx, p(ctx, ins[i]))
+					<-p(ctx, ins[i])
 				}(i, pipeable)
 			}
 		}()

@@ -3,10 +3,12 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 func ExampleParallel() {
@@ -86,23 +88,36 @@ func TestParallel(t *testing.T) {
 		go func() {
 			defer close(in)
 			in <- rivo.Item[string]{Val: "Hello"}
+			in <- rivo.Item[string]{Val: "Hello"}
 			cancel()
+			in <- rivo.Item[string]{Val: "Hello"}
 			in <- rivo.Item[string]{Val: "Hello"}
 			in <- rivo.Item[string]{Val: "Hello"}
 
 		}()
 
+		mtxA := sync.Mutex{}
 		resA := make([]rivo.Item[string], 0)
 		a := rivo.Do(func(ctx context.Context, i rivo.Item[string]) {
+			mtxA.Lock()
+			defer mtxA.Unlock()
 			resA = append(resA, i)
 		})
 
+		mtxB := sync.Mutex{}
 		resB := make([]rivo.Item[string], 0)
 		b := rivo.Do(func(ctx context.Context, i rivo.Item[string]) {
+			mtxB.Lock()
+			defer mtxB.Unlock()
 			resB = append(resB, i)
 		})
 
 		<-rivo.Parallel(a, b)(ctx, in)
+
+		mtxA.Lock()
+		mtxB.Lock()
+		defer mtxA.Unlock()
+		defer mtxB.Unlock()
 
 		assert.LessOrEqual(t, len(resA), 3)
 		assert.LessOrEqual(t, len(resB), 3)

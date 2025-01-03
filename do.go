@@ -5,13 +5,13 @@ import (
 	"sync"
 )
 
-// Do returns a Pipeable that applies the given function to each item in the stream.
+// Do returns a Sync that applies the given function to each item in the stream.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Do[T any](f func(ctx context.Context, i Item[T]), opt ...Option) Pipeable[T, struct{}] {
+func Do[T any](f func(ctx context.Context, i Item[T]), opt ...Option) Sync[T] {
 	o := mustOptions(opt...)
 
-	return func(ctx context.Context, in Stream[T]) Stream[struct{}] {
-		out := make(chan Item[struct{}])
+	return func(ctx context.Context, in Stream[T]) Stream[None] {
+		out := make(chan Item[None])
 
 		go func() {
 			defer close(out)

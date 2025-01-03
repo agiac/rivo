@@ -9,7 +9,7 @@ import (
 
 // FromReader returns a pipeable that reads from an io.Reader.
 // It's not thread-safe to use a pool size greater than 1.
-func FromReader(r io.Reader, opt ...rivo.Option) rivo.Pipeable[struct{}, []byte] {
+func FromReader(r io.Reader, opt ...rivo.Option) rivo.Generator[[]byte] {
 	buf := make([]byte, 1024)
 	return rivo.FromFunc[[]byte](func(ctx context.Context) ([]byte, error) {
 		n, err := r.Read(buf)

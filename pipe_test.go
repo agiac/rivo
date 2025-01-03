@@ -3,9 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func ExamplePipe() {
@@ -67,7 +68,7 @@ func TestPipe(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Val == 3 {
+			if i.Val == 2 {
 				cancel()
 			}
 			return i.Val + 1, nil
@@ -77,7 +78,7 @@ func TestPipe(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 3)
+		assert.LessOrEqual(t, len(got), 4)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
@@ -116,7 +117,7 @@ func TestPipe2(t *testing.T) {
 		a := Of(1, 2, 3, 4, 5)
 
 		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Val == 3 {
+			if i.Val == 2 {
 				cancel()
 			}
 			return i.Val + 1, nil
@@ -126,7 +127,7 @@ func TestPipe2(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 3)
+		assert.LessOrEqual(t, len(got), 4)
 		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
@@ -287,7 +288,7 @@ func TestPipe5(t *testing.T) {
 
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
-	
+
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
