@@ -19,23 +19,20 @@ var data string
 func main() {
 	ctx := context.Background()
 
-	// Create a new CSV reader and discard the first line
 	r := csv.NewReader(bufio.NewReader(strings.NewReader(data)))
-	_, _ = r.Read()
+	_, _ = r.Read() // Discard the header line
 
-	p := rivo.Pipe(rivocsv.FromReader(r), rivo.Filter(func(ctx context.Context, i rivo.Item[[]string]) (bool, error) {
+	filter := rivo.FilterFunc[[]string](func(ctx context.Context, i rivo.Item[[]string]) (bool, error) {
 		date, err := time.Parse("2006-01-02", i.Val[5])
 		if err != nil {
 			return false, nil
 		}
 		return date.After(time.Date(2023, 1, 20, 0, 0, 0, 0, time.UTC)), nil
-	}))
+	})
 
-	for item := range p(ctx, nil) {
-		if item.Err != nil {
-			log.Printf("ERROR: %v\n", item.Err)
-			continue
-		}
-		log.Println(item.Val)
-	}
+	log := rivo.DoFunc[[]string](func(ctx context.Context, i rivo.Item[[]string]) {
+		log.Println(i.Val)
+	})
+
+	<-rivo.Pipe3(rivocsv.FromReader(r), rivo.Filter(filter), rivo.Do(log))(ctx, nil)
 }

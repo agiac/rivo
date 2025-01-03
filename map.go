@@ -5,8 +5,10 @@ import (
 	"sync"
 )
 
+type MapFunc[T, U any] = func(context.Context, Item[T]) (U, error)
+
 // Map returns a Transformer that applies a function to each item from the input stream.
-func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) Transformer[T, U] {
+func Map[T, U any](f MapFunc[T, U], opt ...Option) Transformer[T, U] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[U] {

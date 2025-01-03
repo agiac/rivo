@@ -5,9 +5,11 @@ import (
 	"sync"
 )
 
+type DoFunc[T any] = func(context.Context, Item[T])
+
 // Do returns a Sync that applies the given function to each item in the stream.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Do[T any](f func(ctx context.Context, i Item[T]), opt ...Option) Sync[T] {
+func Do[T any](f DoFunc[T], opt ...Option) Sync[T] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, in Stream[T]) Stream[None] {
