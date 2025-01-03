@@ -102,6 +102,7 @@ func main() {
 - `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
 - `Filter`: returns a pipeable which filters the input stream using the given function;
 - `Map`: returns a pipeable which maps the input stream using the given function;
+- `ForEach`: returns a pipeable which applies the given function to each item in the input stream and forwards only the errors;
 - `Do`: returns a pipeable which performs a side effect for each item in the input stream;
 - `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
 
@@ -116,6 +117,11 @@ Besides these, the directories of the library contain more specialized pipeables
 
 - `FromScanner`: returns a pipeable which reads from the provided `bufio.Scanner` and emits the scanned items;
 - `ToScanner`: returns a pipeable which writes the input stream to the provided `bufio.Writer`;
+
+### Package `rivo/csv`
+
+- `FromReader`: returns a pipeable which reads from the provided `csv.Reader` and emits the read records;
+- `ToWriter`: returns a pipeable which writes the input stream to the provided `csv.Writer`;
 
 ### Optional parameters
 
@@ -164,7 +170,6 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 - [ ] Generator and Sync type aliases, once bug in Go 1.23 is fixed
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Batch
-  - [ ] CSV
   - [ ] Error handling
   - [ ] Time-based
   - [ ] SQL
