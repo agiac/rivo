@@ -167,7 +167,8 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 
 ## Roadmap
 
-- [ ] Generator and Sync type aliases, once bug in Go 1.23 is fixed
+- [ ] Generator and Sync type aliases, once bug in Go 1.24 is available
+- [ ] Type aliases for pipeable factories functions, once bug in Go 1.24 is available
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Batch
   - [ ] Error handling
