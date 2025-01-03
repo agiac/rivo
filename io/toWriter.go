@@ -1,9 +1,10 @@
-package rivo_io
+package io
 
 import (
 	"context"
-	"github.com/agiac/rivo"
 	"io"
+
+	"github.com/agiac/rivo"
 )
 
 // ToWriter returns a pipeable that writes to an io.Writer.

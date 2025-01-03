@@ -1,9 +1,10 @@
-package rivo_io
+package io
 
 import (
 	"context"
-	"github.com/agiac/rivo"
 	"io"
+
+	"github.com/agiac/rivo"
 )
 
 // FromReader returns a pipeable that reads from an io.Reader.

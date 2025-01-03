@@ -1,13 +1,14 @@
-package rivo_bufio_test
+package bufio_test
 
 import (
 	"bufio"
 	"context"
-	. "github.com/agiac/rivo"
-	. "github.com/agiac/rivo/rivo_bufio"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	. "github.com/agiac/rivo"
+	. "github.com/agiac/rivo/bufio"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFromScanner(t *testing.T) {

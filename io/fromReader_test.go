@@ -1,11 +1,12 @@
-package rivo_io_test
+package io_test
 
 import (
 	"context"
-	. "github.com/agiac/rivo/rivo_io"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	. "github.com/agiac/rivo/io"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFromReader(t *testing.T) {

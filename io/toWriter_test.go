@@ -1,12 +1,13 @@
-package rivo_io_test
+package io_test
 
 import (
 	"bytes"
 	"context"
-	. "github.com/agiac/rivo"
-	. "github.com/agiac/rivo/rivo_io"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	. "github.com/agiac/rivo"
+	. "github.com/agiac/rivo/io"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToWriter(t *testing.T) {

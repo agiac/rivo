@@ -1,8 +1,9 @@
-package rivo_bufio
+package bufio
 
 import (
 	"bufio"
 	"context"
+
 	"github.com/agiac/rivo"
 )
 

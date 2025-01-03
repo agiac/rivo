@@ -107,12 +107,12 @@ func main() {
 
 Besides these, the directories of the library contain more specialized pipeables factories.
 
-### Package `rivo/rivo_io`
+### Package `rivo/io`
 
 - `FromReader`: returns a pipeable which reads from the provided `io.Reader` and emits the read bytes;
 - `ToWriter`: returns a pipeable which writes the input stream to the provided `io.Writer`;
 
-### Package `rivo/rivo_bufio`
+### Package `rivo/bufio`
 
 - `FromScanner`: returns a pipeable which reads from the provided `bufio.Scanner` and emits the scanned items;
 - `ToScanner`: returns a pipeable which writes the input stream to the provided `bufio.Writer`;
