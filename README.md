@@ -123,7 +123,6 @@ func main() {
 
 ### Sinks
 - `Do`: returns a pipeable which performs a side effect for each item in the input stream;
-- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
 
 ### Transformers
 - `Filter`: returns a pipeable which filters the input stream using the given function;
@@ -147,7 +146,7 @@ Besides these, the directories of the library contain more specialized pipeables
 - `FromReader`: returns a pipeable which reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a pipeable which writes the input stream to the provided `csv.Writer`;
 
-### Optional parameters
+## Optional parameters
 
 Many pipeable factories accepts a common set of optional parameters. These can be provided via functional options.
 
@@ -166,6 +165,14 @@ The currently available options are:
 - `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
 - `WithStopOnError(bool)`: if true, the pipeable will stop processing items when an error is encountered. Default is false.
 - `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
+
+## Higher order pipeables
+
+`rivo` also provides a set of higher order pipeables, which are pipeables that take other pipeables as arguments.
+
+- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeable which composes the provided pipeables together;
+- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
+- `Fork`, `ForkN`: returns n pipeables that apply the given pipeable to the input stream.
 
 ## Utilities
 
@@ -193,6 +200,7 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 
 - [ ] Review docs, in particular where "pipeable" is used instead of "generator", "sink" or "transformer"
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
+  - [ ] Tap 
   - [ ] Batch
   - [ ] Error handling
   - [ ] Time-based
