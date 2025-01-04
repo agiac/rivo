@@ -24,27 +24,27 @@ func Pipe[A, B, C any](a Pipeable[A, B], b Pipeable[B, C]) Pipeable[A, C] {
 // Pipe2 pipes two pipeable functions together.
 func Pipe2[A, B, C any](a Pipeable[A, B], b Pipeable[B, C]) Pipeable[A, C] {
 	return func(ctx context.Context, stream Stream[A]) Stream[C] {
-		return b(ctx, a(ctx, stream))
+		return b(context.WithoutCancel(ctx), a(ctx, stream))
 	}
 }
 
 // Pipe3 pipes three pipeable functions together.
 func Pipe3[A, B, C, D any](a Pipeable[A, B], b Pipeable[B, C], c Pipeable[C, D]) Pipeable[A, D] {
 	return func(ctx context.Context, stream Stream[A]) Stream[D] {
-		return c(ctx, b(ctx, a(ctx, stream)))
+		return c(context.WithoutCancel(ctx), b(context.WithoutCancel(ctx), a(ctx, stream)))
 	}
 }
 
 // Pipe4 pipes four pipeable functions together.
 func Pipe4[A, B, C, D, E any](a Pipeable[A, B], b Pipeable[B, C], c Pipeable[C, D], d Pipeable[D, E]) Pipeable[A, E] {
 	return func(ctx context.Context, stream Stream[A]) Stream[E] {
-		return d(ctx, c(ctx, b(ctx, a(ctx, stream))))
+		return d(context.WithoutCancel(ctx), c(context.WithoutCancel(ctx), b(context.WithoutCancel(ctx), a(ctx, stream))))
 	}
 }
 
 // Pipe5 pipes five pipeable functions together.
 func Pipe5[A, B, C, D, E, F any](a Pipeable[A, B], b Pipeable[B, C], c Pipeable[C, D], d Pipeable[D, E], e Pipeable[E, F]) Pipeable[A, F] {
 	return func(ctx context.Context, stream Stream[A]) Stream[F] {
-		return e(ctx, d(ctx, c(ctx, b(ctx, a(ctx, stream)))))
+		return e(context.WithoutCancel(ctx), d(context.WithoutCancel(ctx), c(context.WithoutCancel(ctx), b(context.WithoutCancel(ctx), a(ctx, stream)))))
 	}
 }

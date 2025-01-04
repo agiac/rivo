@@ -119,6 +119,7 @@ func main() {
 ### Generators
 - `Of`: returns a pipeable which returns a stream that will emit the provided values;
 - `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
+- `FromSeq` and `FromSeq2`: returns a pipeable which returns a stream that will emit the values from the provided iterator;
 
 ### Sinks
 - `Do`: returns a pipeable which performs a side effect for each item in the input stream;

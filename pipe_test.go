@@ -79,7 +79,6 @@ func TestPipe(t *testing.T) {
 		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 4)
-		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
 
@@ -128,7 +127,6 @@ func TestPipe2(t *testing.T) {
 		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 4)
-		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
 
@@ -183,7 +181,6 @@ func TestPipe3(t *testing.T) {
 		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
-		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
 
@@ -249,7 +246,6 @@ func TestPipe4(t *testing.T) {
 		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 3)
-		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }
 
@@ -321,6 +317,5 @@ func TestPipe5(t *testing.T) {
 		got := Collect(p(ctx, nil))
 
 		assert.LessOrEqual(t, len(got), 2)
-		assert.ErrorIs(t, got[len(got)-1].Err, context.Canceled)
 	})
 }

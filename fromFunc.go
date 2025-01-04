@@ -15,7 +15,7 @@ type FromFuncFunc[T any] = func(context.Context) (T, error)
 func FromFunc[T any](f FromFuncFunc[T], options ...Option) Generator[T] {
 	o := mustOptions(options...)
 
-	return func(ctx context.Context, stream Stream[None]) Stream[T] {
+	return func(ctx context.Context, _ Stream[None]) Stream[T] {
 		out := make(chan Item[T], o.bufferSize)
 
 		go func() {
