@@ -22,6 +22,9 @@ func main() {
 	})
 
 	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) (int, error) {
+		if i.Err != nil {
+			return 0, i.Err // Pass errors along
+		}
 		return i.Val * 2, nil
 	})
 
@@ -37,25 +40,30 @@ func main() {
 		return i.Err != nil, nil
 	})
 
+	errs := make([]error, 0)
 	handleError := rivo.Do[int](func(ctx context.Context, i rivo.Item[int]) {
-		fmt.Printf("Error: %v\n", i.Err)
+		errs = append(errs, i.Err)
 	})
 
 	valP := rivo.Pipe3(filterNonError, double, logValue)
 
 	errP := rivo.Pipe(filterError, handleError)
 
-	<-rivo.Pipe3(g, toInt, rivo.Connect(valP, errP))(ctx, nil)
+	<-rivo.Pipe4(g, toInt, double, rivo.Connect(valP, errP))(ctx, nil)
+
+	for _, err := range errs {
+		fmt.Printf("Error: %v\n", err)
+	}
 
 	// Expected output:
-	// Value: 2
 	// Value: 4
+	// Value: 8
+	// Value: 16
+	// Value: 20
+	// Value: 32
+	// Value: 36
+	// Value: 40
 	// Error: strconv.Atoi: parsing "3_": invalid syntax
 	// Error: strconv.Atoi: parsing "6**": invalid syntax
-	// Value: 8
-	// Value: 10
-	// Value: 16
-	// Value: 18
 	// Error: strconv.Atoi: parsing "?": invalid syntax
-	// Value: 20
 }
