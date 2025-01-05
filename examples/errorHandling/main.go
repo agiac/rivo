@@ -45,7 +45,7 @@ func main() {
 
 	errP := rivo.Pipe(filterError, handleError)
 
-	<-rivo.Pipe3(g, toInt, rivo.Parallel(valP, errP))(ctx, nil)
+	<-rivo.Pipe3(g, toInt, rivo.Connect(valP, errP))(ctx, nil)
 
 	// Expected output:
 	// Value: 2
