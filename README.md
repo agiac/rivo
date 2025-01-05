@@ -173,6 +173,7 @@ The currently available options are:
 - `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeable which composes the provided pipeables together;
 - `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
 - `Segregate`: returns a function that returns two pipeables, where the first pipeable emits items that pass the predicate, and the second pipeable emits items that do not pass the predicate.
+- `WithErrorHandler`: returns a pipeable that connects the input pipeable to an error handling pipeable.
 
 ## Utilities
 
