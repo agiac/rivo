@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ExampleParallel() {
+func ExampleConnect() {
 	ctx := context.Background()
 
 	g := rivo.Of("Hello", "Hello", "Hello")
