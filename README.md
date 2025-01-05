@@ -171,8 +171,7 @@ The currently available options are:
 `rivo` also provides a set of higher order pipeables, which are pipeables that take other pipeables as arguments.
 
 - `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeable which composes the provided pipeables together;
-- `Parallel`: returns a pipeable which applies the given pipeables to the input stream concurrently;
-- `Fork`, `ForkN`: returns n pipeables that apply the given pipeable to the input stream.
+- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
 
 ## Utilities
 

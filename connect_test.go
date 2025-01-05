@@ -37,7 +37,7 @@ func ExampleParallel() {
 	p1 := rivo.Pipe(capitalize, a)
 	p2 := rivo.Pipe(lowercase, b)
 
-	<-rivo.Parallel(p1, p2)(ctx, g(ctx, nil))
+	<-rivo.Connect(p1, p2)(ctx, g(ctx, nil))
 
 	for _, s := range resA {
 		fmt.Println(s)
@@ -72,7 +72,7 @@ func TestParallel(t *testing.T) {
 			resB = append(resB, i.Val)
 		})
 
-		<-rivo.Parallel(a, b)(ctx, g(ctx, nil))
+		<-rivo.Connect(a, b)(ctx, g(ctx, nil))
 
 		want := []string{"Hello", "Hello", "Hello"}
 
@@ -112,7 +112,7 @@ func TestParallel(t *testing.T) {
 			resB = append(resB, i)
 		})
 
-		<-rivo.Parallel(a, b)(ctx, in)
+		<-rivo.Connect(a, b)(ctx, in)
 
 		mtxA.Lock()
 		mtxB.Lock()

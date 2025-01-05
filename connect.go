@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-// Parallel returns a Sync that applies the given syncs to the input stream in parallel.
+// Connect returns a Sync that applies the given syncs to the input stream concurrently.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Parallel[A any](pipeables ...Sync[A]) Sync[A] {
+func Connect[A any](pipeables ...Sync[A]) Sync[A] {
 	return func(ctx context.Context, in Stream[A]) Stream[None] {
 		out := make(chan Item[None])
 
