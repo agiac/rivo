@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// Batch returns a Pipeable that batches items from the input Stream into slices of n items.
+// If the batch is not full after maxWait, it will be sent anyway.
+// Any error in the input Stream will be propagated to the output Stream immediately.
 func Batch[T any](n int, maxWait time.Duration, opt ...Option) Pipeable[T, []T] {
 	o := mustOptions(opt...)
 
