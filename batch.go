@@ -22,67 +22,67 @@ func Batch[T any](n int, maxWait time.Duration, opt ...Option) Pipeable[T, []T] 
 				return batchCopy
 			}
 
+			sendBatch := func() (exit bool) {
+				if len(batch) > 0 {
+					select {
+					case out <- Item[[]T]{Val: copyBatch()}:
+						batch = batch[:0]
+					case <-ctx.Done():
+						out <- Item[[]T]{Err: ctx.Err()}
+						return true
+					}
+				}
+				return false
+			}
+
+			sendError := func(err error) (exit bool) {
+				select {
+				case out <- Item[[]T]{Err: err}:
+				case <-ctx.Done():
+					out <- Item[[]T]{Err: ctx.Err()}
+					return true
+				}
+				return false
+			}
+
 			for {
 				select {
 				case item, ok := <-in:
 					if !ok {
-						if len(batch) > 0 {
-							select {
-							case out <- Item[[]T]{Val: copyBatch()}:
-							case <-ctx.Done():
-								out <- Item[[]T]{Err: ctx.Err()}
-							}
-						}
+						sendBatch()
 						return
 					}
 
 					if item.Err != nil {
-						select {
-						case out <- Item[[]T]{Err: item.Err}:
-						case <-ctx.Done():
-							out <- Item[[]T]{Err: ctx.Err()}
+						if exit := sendError(item.Err); exit {
 							return
 						}
+
 						if o.stopOnError {
-							select {
-							case out <- Item[[]T]{Val: copyBatch()}:
-								batch = batch[:0]
-							case <-ctx.Done():
-								out <- Item[[]T]{Err: ctx.Err()}
-								return
-							}
+							sendBatch()
 							return
 						}
+
 						continue
 					}
 
 					batch = append(batch, item.Val)
 
 					if len(batch) == n {
-						select {
-						case out <- Item[[]T]{Val: copyBatch()}:
-							batch = batch[:0]
-						case <-ctx.Done():
-							out <- Item[[]T]{Err: ctx.Err()}
+						if exit := sendBatch(); exit {
 							return
 						}
 					}
-
 				case <-time.After(maxWait):
-					if len(batch) > 0 {
-						select {
-						case out <- Item[[]T]{Val: copyBatch()}:
-							batch = batch[:0]
-						case <-ctx.Done():
-							out <- Item[[]T]{Err: ctx.Err()}
-							return
-						}
+					if exit := sendBatch(); exit {
+						return
 					}
 				case <-ctx.Done():
 					out <- Item[[]T]{Err: ctx.Err()}
 					return
 				}
 			}
+
 		}()
 
 		return out
