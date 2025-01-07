@@ -130,6 +130,7 @@ func main() {
 - `Filter`: returns a pipeable which filters the input stream using the given function;
 - `Map`: returns a pipeable which maps the input stream using the given function;
 - `ForEach`: returns a pipeable which applies the given function to each item in the input stream and forwards only the errors;
+- `Batch`: returns a pipeable which groups the input stream into batches of the provided size;
 
 Besides these, the directories of the library contain more specialized pipeables factories.
 
