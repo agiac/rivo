@@ -16,6 +16,7 @@ func Batch[T any](n int, maxWait time.Duration, opt ...Option) Pipeable[T, []T] 
 
 		go func() {
 			defer close(out)
+			defer beforeClose(ctx, out, o)
 
 			batch := make([]T, 0, n)
 

@@ -170,4 +170,31 @@ func TestBatch(t *testing.T) {
 
 		assert.Equal(t, want, got)
 	})
+
+	t.Run("with on before close", func(t *testing.T) {
+		ctx := context.Background()
+
+		in := make(chan Item[int])
+
+		go func() {
+			defer close(in)
+			in <- Item[int]{Val: 1}
+			in <- Item[int]{Val: 2}
+		}()
+
+		var called bool
+		b := Batch[int](2, time.Second, WithOnBeforeClose(func(ctx context.Context) error {
+			called = true
+			return nil
+		}))
+
+		got := Collect(b(ctx, in))
+
+		want := []Item[[]int]{
+			{Val: []int{1, 2}},
+		}
+
+		assert.Equal(t, want, got)
+		assert.True(t, called)
+	})
 }
