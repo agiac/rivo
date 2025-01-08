@@ -131,6 +131,7 @@ func main() {
 - `Map`: returns a pipeable which maps the input stream using the given function;
 - `ForEach`: returns a pipeable which applies the given function to each item in the input stream and forwards only the errors;
 - `Batch`: returns a pipeable which groups the input stream into batches of the provided size;
+- `Flatten`: returns a pipeable which flattens the input stream of slices; 
 
 Besides these, the directories of the library contain more specialized pipeables factories.
 
@@ -209,7 +210,7 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 - [ ] Review docs, in particular where "pipeable" is used instead of "generator", "sink" or "transformer"
 - [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Tap 
-  - [ ] Batch
+  - [ ] Better error handling
   - [ ] Time-based
   - [ ] SQL
   - [ ] AWS
