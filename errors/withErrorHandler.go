@@ -9,7 +9,7 @@ import (
 
 // WithErrorHandler returns a pipeable that connects the input pipeable to an error handling pipeable.
 // The items that don't contain errors are passed to the output stream, while the items that contain errors are passed to the error handling pipeable.
-func WithErrorHandler[T, U any](p rivo.Pipeable[T, U], errHandler rivo.Pipeable[struct{}, rivo.None]) rivo.Pipeable[T, U] {
+func WithErrorHandler[T, U any](p rivo.Pipeline[T, U], errHandler rivo.Pipeline[struct{}, rivo.None]) rivo.Pipeline[T, U] {
 	return func(ctx context.Context, in rivo.Stream[T]) rivo.Stream[U] {
 		out := make(chan rivo.Item[U])
 

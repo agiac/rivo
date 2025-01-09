@@ -9,7 +9,7 @@ import (
 
 // FromScanner returns a generator pipeable that reads from a bufio.Scanner.
 // It's not thread-safe to use a pool size greater than 1.
-func FromScanner(s *bufio.Scanner, opt ...rivo.Option) rivo.Pipeable[rivo.None, []byte] {
+func FromScanner(s *bufio.Scanner, opt ...rivo.Option) rivo.Pipeline[rivo.None, []byte] {
 	return rivo.FromFunc[[]byte](func(ctx context.Context) ([]byte, error) {
 		if !s.Scan() {
 			if err := s.Err(); err != nil {

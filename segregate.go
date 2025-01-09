@@ -3,8 +3,8 @@ package rivo
 import "context"
 
 // Segregate returns a function that returns two pipeables, where the first pipeable emits items that pass the predicate, and the second pipeable emits items that do not pass the predicate.
-func Segregate[T, U any](p Pipeable[T, U], predicate func(ctx context.Context, item Item[U]) bool) func(context.Context, Stream[T]) (Pipeable[None, U], Pipeable[None, U]) {
-	return func(ctx context.Context, in Stream[T]) (Pipeable[None, U], Pipeable[None, U]) {
+func Segregate[T, U any](p Pipeline[T, U], predicate func(ctx context.Context, item Item[U]) bool) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
+	return func(ctx context.Context, in Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
 		out1 := make(chan Item[U])
 		out2 := make(chan Item[U])
 

@@ -5,7 +5,7 @@ import (
 	"iter"
 )
 
-func FromSeq[T any](seq iter.Seq[T], opt ...Option) Pipeable[None, T] {
+func FromSeq[T any](seq iter.Seq[T], opt ...Option) Pipeline[None, T] {
 	next, stop := iter.Pull(seq)
 	return FromFunc[T](
 		func(ctx context.Context) (T, error) {
@@ -28,7 +28,7 @@ type FromSeq2Value[T, U any] struct {
 	Val2 U
 }
 
-func FromSeq2[T, U any](seq iter.Seq2[T, U], opts ...Option) Pipeable[None, FromSeq2Value[T, U]] {
+func FromSeq2[T, U any](seq iter.Seq2[T, U], opts ...Option) Pipeline[None, FromSeq2Value[T, U]] {
 	next, stop := iter.Pull2(seq)
 	return FromFunc[FromSeq2Value[T, U]](
 		func(ctx context.Context) (FromSeq2Value[T, U], error) {

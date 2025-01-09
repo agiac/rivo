@@ -4,8 +4,8 @@ import (
 	"context"
 )
 
-// Flatten returns a Pipeable that flattens a Stream of slices into a Stream of individual items.
-func Flatten[T any](opt ...Option) Pipeable[[]T, T] {
+// Flatten returns a Pipeline that flattens a Stream of slices into a Stream of individual items.
+func Flatten[T any](opt ...Option) Pipeline[[]T, T] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, in Stream[[]T]) Stream[T] {
