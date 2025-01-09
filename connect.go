@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-// Connect returns a Sync that applies the given syncs to the input stream concurrently.
+// Connect returns a sync pipeable that applies the given syncs to the input stream concurrently.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Connect[A any](pipeables ...Sync[A]) Sync[A] {
+func Connect[A any](pipeables ...Pipeable[A, None]) Pipeable[A, None] {
 	return func(ctx context.Context, in Stream[A]) Stream[None] {
 		out := make(chan Item[None])
 
@@ -21,7 +21,7 @@ func Connect[A any](pipeables ...Sync[A]) Sync[A] {
 			defer wg.Wait()
 
 			for i, pipeable := range pipeables {
-				go func(i int, p Sync[A]) {
+				go func(i int, p Pipeable[A, None]) {
 					defer wg.Done()
 					<-p(ctx, ins[i])
 				}(i, pipeable)

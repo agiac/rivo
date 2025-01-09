@@ -7,15 +7,6 @@ type None struct{}
 // Pipeable is a function that takes a context and a stream and returns a stream. It is the building block of a data pipeline.
 type Pipeable[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
 
-// Generator is a pipeable function that does not read from its input stream. It starts a new stream from scratch.
-type Generator[T any] = Pipeable[None, T]
-
-// Sync is a pipeable function that does not emit any items. It is used at the end of a pipeline.
-type Sync[T any] = Pipeable[T, None]
-
-// Transformer is a pipeable that reads from its input stream and emits items to its output stream.
-type Transformer[T, U any] = Pipeable[T, U]
-
 // Pipe pipes two pipeable functions together. It is a convenience function that calls Pipe2.
 func Pipe[A, B, C any](a Pipeable[A, B], b Pipeable[B, C]) Pipeable[A, C] {
 	return Pipe2(a, b)

@@ -12,5 +12,5 @@
 // Pipeables are divided in three categories: generators, sinks and transformers.
 //   - Generator is a pipeable that does not read from its input stream. It starts a new stream from scratch.
 //   - Sync is a pipeable function that does not emit any items. It is used at the end of a pipeline.
-//   - Transformer is a pipeable that reads from its input stream and emits items to its output stream.
+//   - Pipeable is a pipeable that reads from its input stream and emits items to its output stream.
 package rivo
