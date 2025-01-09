@@ -1,3 +1,4 @@
+// Package rivo is a library for stream processing.
 package rivo
 
 import "context"
