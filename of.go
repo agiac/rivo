@@ -2,8 +2,8 @@ package rivo
 
 import "context"
 
-// Of returns a generator Pipeable that emits the given items. The input stream is ignored.
-func Of[T any](items ...T) Generator[T] {
+// Of returns a generator Pipeline that emits the given items. The input stream is ignored.
+func Of[T any](items ...T) Pipeline[None, T] {
 	return func(ctx context.Context, _ Stream[None]) Stream[T] {
 		out := make(chan Item[T])
 

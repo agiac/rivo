@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var addOne = Map(func(ctx context.Context, i Item[int]) (int, error) {
+	return i.Val + 1, nil
+})
+
 func ExamplePipe() {
 	ctx := context.Background()
 
@@ -35,16 +39,13 @@ func ExamplePipe() {
 }
 
 func TestPipe(t *testing.T) {
+
 	t.Run("pipe all values", func(t *testing.T) {
 		ctx := context.Background()
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		p := Pipe(a, b)
+		p := Pipe(a, addOne)
 
 		got := Collect(p(ctx, nil))
 
@@ -88,11 +89,7 @@ func TestPipe2(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		p := Pipe2(a, b)
+		p := Pipe2(a, addOne)
 
 		got := Collect(p(ctx, nil))
 
@@ -136,22 +133,16 @@ func TestPipe3(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		p := Pipe3(a, b, c)
+		p := Pipe3(a, addOne, addOne)
 
 		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
-			{Val: 2},
+			{Val: 3},
 			{Val: 4},
+			{Val: 5},
 			{Val: 6},
+			{Val: 7},
 		}
 
 		assert.Equal(t, want, got)
@@ -165,18 +156,14 @@ func TestPipe3(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+		f := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 3 {
 				cancel()
 			}
 			return i.Val%2 == 0, nil
 		})
 
-		p := Pipe3(a, b, c)
+		p := Pipe3(a, addOne, f)
 
 		got := Collect(p(ctx, nil))
 
@@ -190,26 +177,16 @@ func TestPipe4(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val * 2, nil
-		})
-
-		p := Pipe4(a, b, c, d)
+		p := Pipe4(a, addOne, addOne, addOne)
 
 		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 4},
+			{Val: 5},
+			{Val: 6},
+			{Val: 7},
 			{Val: 8},
-			{Val: 12},
 		}
 
 		assert.Equal(t, want, got)
@@ -223,25 +200,14 @@ func TestPipe4(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+		f := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 4 {
 				cancel()
 			}
 			return i.Val%2 == 0, nil
 		})
 
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Err != nil {
-				return 0, i.Err
-			}
-			return i.Val * 2, nil
-		})
-
-		p := Pipe4(a, b, c, d)
+		p := Pipe4(a, addOne, f, addOne)
 
 		got := Collect(p(ctx, nil))
 
@@ -255,28 +221,16 @@ func TestPipe5(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		})
-
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val * 2, nil
-		})
-
-		e := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%3 == 0, nil
-		})
-
-		p := Pipe5(a, b, c, d, e)
+		p := Pipe5(a, addOne, addOne, addOne, addOne)
 
 		got := Collect(p(ctx, nil))
 
 		want := []Item[int]{
-			{Val: 12},
+			{Val: 5},
+			{Val: 6},
+			{Val: 7},
+			{Val: 8},
+			{Val: 9},
 		}
 
 		assert.Equal(t, want, got)
@@ -290,29 +244,14 @@ func TestPipe5(t *testing.T) {
 
 		a := Of(1, 2, 3, 4, 5)
 
-		b := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		})
-
-		c := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
+		f := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
 			if i.Val == 4 {
 				cancel()
 			}
 			return i.Val%2 == 0, nil
 		})
 
-		d := Map(func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Err != nil {
-				return 0, i.Err
-			}
-			return i.Val * 2, nil
-		})
-
-		e := Filter(func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%3 == 0, nil
-		})
-
-		p := Pipe5(a, b, c, d, e)
+		p := Pipe5(a, addOne, f, addOne, addOne)
 
 		got := Collect(p(ctx, nil))
 

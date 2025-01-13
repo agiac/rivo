@@ -7,9 +7,9 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// FromReader returns a pipeable that reads from an io.Reader.
+// FromReader returns a pipeline that reads from an io.Reader.
 // It's not thread-safe to use a pool size greater than 1.
-func FromReader(r io.Reader, opt ...rivo.Option) rivo.Generator[[]byte] {
+func FromReader(r io.Reader, opt ...rivo.Option) rivo.Pipeline[rivo.None, []byte] {
 	buf := make([]byte, 1024)
 	return rivo.FromFunc[[]byte](func(ctx context.Context) ([]byte, error) {
 		n, err := r.Read(buf)

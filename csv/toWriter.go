@@ -7,9 +7,9 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// ToWriter returns a rivo.Transformer that writes to a csv.Writer. Only errors from the
+// ToWriter returns a pipeline that writes to a csv.Writer. Only errors from the
 // csv.Writer are passed to the output stream.
-func ToWriter(w *csv.Writer, opts ...rivo.Option) rivo.Transformer[[]string, struct{}] {
+func ToWriter(w *csv.Writer, opts ...rivo.Option) rivo.Pipeline[[]string, struct{}] {
 	writeRow := func(ctx context.Context, i rivo.Item[[]string]) error {
 		if i.Err != nil {
 			return i.Err

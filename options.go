@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// options contains common configuration options for a Pipeable.
+// options contains common configuration options for a Pipeline.
 type options struct {
 	poolSize      int
 	bufferSize    int
@@ -50,7 +50,7 @@ func mustOptions(opts ...Option) options {
 	return o
 }
 
-// Option is a configuration option for a Pipeable.
+// Option is a configuration option for a Pipeline.
 type Option func(*options)
 
 // WithPoolSize sets the number of goroutines that will be used to process items. The default is 1.
@@ -67,14 +67,14 @@ func WithBufferSize(size int) Option {
 	}
 }
 
-// WithStopOnError determines whether the Pipeable should stop processing items when an error occurs. The default is false.
+// WithStopOnError determines whether the Pipeline should stop processing items when an error occurs. The default is false.
 func WithStopOnError(stop bool) Option {
 	return func(o *options) {
 		o.stopOnError = stop
 	}
 }
 
-// WithOnBeforeClose sets a function that will be called before the Pipeable output channel is closed.
+// WithOnBeforeClose sets a function that will be called before the Pipeline output channel is closed.
 func WithOnBeforeClose(fn func(context.Context) error) Option {
 	return func(o *options) {
 		// If there is already a function set, chain the new function with the existing one.

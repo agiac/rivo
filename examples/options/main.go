@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/agiac/rivo"
 )
 
-// This example demonstrates how to pass additional options to a pipeable.
+// This example demonstrates how to pass additional options to a pipeline.
 
 func main() {
 	ctx := context.Background()
@@ -27,7 +28,7 @@ func main() {
 		return i.Val * 2, nil
 	}
 
-	// `Pass additional options to the pipeable
+	// `Pass additional options to the pipeline
 	double := rivo.Map(doubleFn, rivo.WithBufferSize(1), rivo.WithStopOnError(true))
 
 	p := rivo.Pipe(in, double)

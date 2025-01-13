@@ -7,8 +7,8 @@ import (
 
 type FilterFunc[T any] = func(context.Context, Item[T]) (bool, error)
 
-// Filter returns a Transformer that filters the input stream using the given function.
-func Filter[T any](f FilterFunc[T], opt ...Option) Transformer[T, T] {
+// Filter returns a pipeline that filters the input stream using the given function.
+func Filter[T any](f FilterFunc[T], opt ...Option) Pipeline[T, T] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[T] {
