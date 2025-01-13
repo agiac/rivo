@@ -5,10 +5,8 @@ import (
 	"sync"
 )
 
-type MapFunc[T, U any] = func(context.Context, Item[T]) (U, error)
-
 // Map returns a pipeline that applies a function to each item from the input stream.
-func Map[T, U any](f MapFunc[T, U], opt ...Option) Pipeline[T, U] {
+func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...Option) Pipeline[T, U] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[U] {

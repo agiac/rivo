@@ -5,10 +5,8 @@ import (
 	"sync"
 )
 
-type FilterFunc[T any] = func(context.Context, Item[T]) (bool, error)
-
 // Filter returns a pipeline that filters the input stream using the given function.
-func Filter[T any](f FilterFunc[T], opt ...Option) Pipeline[T, T] {
+func Filter[T any](f func(context.Context, Item[T]) (bool, error), opt ...Option) Pipeline[T, T] {
 	o := mustOptions(opt...)
 
 	return func(ctx context.Context, stream Stream[T]) Stream[T] {

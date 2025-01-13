@@ -17,16 +17,9 @@ and a more intuitive API and developer experience (Rx is very powerful, but can 
 
 ### Prerequisites
 
-`rivo` requires Go 1.24 or later. 
+`rivo` requires Go 1.23 or later. 
 
-For the time being you'll need to use the release candidate version of Go 1.24, which can be installed with:
-
-```shell
-  go install golang.org/dl/go1.24rc1@latest
-  go1.24rc1 download
-```
-
-### Installation
+ ### Installation
 
 ```shell
   go get github.com/agiac/rivo

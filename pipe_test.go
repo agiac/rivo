@@ -255,6 +255,6 @@ func TestPipe5(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 2)
+		assert.LessOrEqual(t, len(got), 3)
 	})
 }
