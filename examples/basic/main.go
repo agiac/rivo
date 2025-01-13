@@ -26,6 +26,7 @@ func main() {
 		return i.Val%2 == 0, nil
 	})
 
+	// `Do` returns a pipeline that applies the given function to each item in the input stream, without emitting any values.
 	log := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
 		if i.Err != nil {
 			fmt.Printf("ERROR: %v\n", i.Err)
