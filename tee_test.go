@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ExampleTee2() {
+func ExampleTee() {
 	ctx := context.Background()
 
 	g := rivo.Of("hello", "hello", "hello")
 
-	out1, out2 := rivo.Tee2(g)(ctx, nil)
+	out1, out2 := rivo.Tee(g)(ctx, nil)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -45,13 +45,13 @@ func ExampleTee2() {
 	// hello
 }
 
-func TestTee2(t *testing.T) {
+func TestTee(t *testing.T) {
 	t.Run("tee stream", func(t *testing.T) {
 		ctx := context.Background()
 
 		g := rivo.Of("hello", "hello", "hello")
 
-		out1, out2 := rivo.Tee2(g)(ctx, nil)
+		out1, out2 := rivo.Tee(g)(ctx, nil)
 
 		var got1, got2 []rivo.Item[string]
 		wg := sync.WaitGroup{}
@@ -97,7 +97,7 @@ func TestTee2(t *testing.T) {
 			return in
 		}
 
-		out1, out2 := rivo.Tee2(g)(ctx, nil)
+		out1, out2 := rivo.Tee(g)(ctx, nil)
 
 		var got1, got2 []rivo.Item[string]
 		wg := sync.WaitGroup{}
@@ -122,7 +122,7 @@ func TestTee2(t *testing.T) {
 	})
 }
 
-func TestTee2N(t *testing.T) {
+func TestTeeN(t *testing.T) {
 	t.Run("tee stream", func(t *testing.T) {
 		ctx := context.Background()
 
@@ -130,7 +130,7 @@ func TestTee2N(t *testing.T) {
 
 		const n = 5
 
-		out := rivo.Tee2N(g, n)(ctx, nil)
+		out := rivo.TeeN(g, n)(ctx, nil)
 
 		got := make([][]rivo.Item[string], n)
 		wg := sync.WaitGroup{}
@@ -171,7 +171,7 @@ func TestTee2N(t *testing.T) {
 
 		const n = 5
 
-		out := rivo.Tee2N(func(ctx context.Context, s rivo.Stream[string]) rivo.Stream[string] {
+		out := rivo.TeeN(func(ctx context.Context, s rivo.Stream[string]) rivo.Stream[string] {
 			return in
 		}, n)(ctx, nil)
 
