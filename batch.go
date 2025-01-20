@@ -6,56 +6,54 @@ import (
 	"time"
 )
 
-type BatchOptions struct {
+type batchOptions struct {
 	maxWait    time.Duration
 	bufferSize int
 }
 
-type BatchOption func(*BatchOptions)
+type BatchOption func(*batchOptions) error
 
 func BatchMaxWait(d time.Duration) BatchOption {
-	return func(o *BatchOptions) {
+	return func(o *batchOptions) error {
+		if d <= 0 {
+			return fmt.Errorf("maxWait must be greater than 0")
+		}
 		o.maxWait = d
+		return nil
 	}
 }
 
 func BatchBufferSize(n int) BatchOption {
-	return func(o *BatchOptions) {
+	return func(o *batchOptions) error {
+		if n < 0 {
+			return fmt.Errorf("bufferSize must be greater than or equal to 0")
+		}
 		o.bufferSize = n
+		return nil
 	}
 }
 
-var batchDefaultOptions = BatchOptions{
+var batchDefaultOptions = batchOptions{
 	maxWait:    1 * time.Second,
 	bufferSize: 0,
 }
 
-func applyBatchOptions(opt []BatchOption) BatchOptions {
+func applyBatchOptions(opt []BatchOption) (batchOptions, error) {
 	opts := batchDefaultOptions
 	for _, o := range opt {
-		o(&opts)
+		if err := o(&opts); err != nil {
+			return opts, err
+		}
 	}
-	return opts
-}
-
-func validateBatchOptions(opt BatchOptions) error {
-	if opt.maxWait <= 0 {
-		return fmt.Errorf("maxWait must be greater than 0")
-	}
-
-	if opt.bufferSize < 0 {
-		return fmt.Errorf("bufferSize must be greater than or equal to 0")
-	}
-
-	return nil
+	return opts, nil
 }
 
 // Batch returns a Pipeline that batches items from the input Stream into slices of n items.
 // If the batch is not full after maxWait, it will be sent anyway.
 // Any error in the input Stream will be propagated to the output Stream immediately.
 func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
-	o := applyBatchOptions(opt)
-	if err := validateBatchOptions(o); err != nil {
+	o, err := applyBatchOptions(opt)
+	if err != nil {
 		panic(fmt.Errorf("invalid batch options: %v", err))
 	}
 
