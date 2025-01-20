@@ -46,11 +46,15 @@ type Stream[T any] <-chan Item[T]
 ```
 
 `Pipeline` is a function that takes a `context.Context` and a `Stream` of one type and returns a `Stream` of the same or a different type.
-Pipelines can be composed together in order to create more complex data processing pipelines.
+They represent the operations that can be performed on streams. Pipelines can be composed together to create more complex operations.
 
 ```go
 type Pipeline[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
 ```
+
+If a pipeline generates values without depending on an input stream, it is called a _generator_. 
+If it consumes values without generating a new stream, it is called a _sink_. 
+If it transforms values, it is called a _transformer_.
 
 Here's a basic example:
 
@@ -69,7 +73,7 @@ func main() {
 	// `Of` returns a generator which returns a stream that will emit the provided values
 	in := rivo.Of(1, 2, 3, 4, 5)
 
-	// `Filter` returns a pipeable that filters the input stream using the given function.
+	// `Filter` returns a transformer that filters the input stream using the given function.
 	onlyEven := rivo.Filter(func(ctx context.Context, i rivo.Item[int]) (bool, error) {
 		// Always check for errors
 		if i.Err != nil {
@@ -79,7 +83,7 @@ func main() {
 		return i.Val%2 == 0, nil
 	})
 
-    // `Do` returns a pipeline that applies the given function to each item in the input stream, without emitting any values.
+    // `Do` returns a sync that applies the given function to each item in the input stream, without emitting any values.
 	log := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
 		if i.Err != nil {
 			fmt.Printf("ERROR: %v\n", i.Err)
@@ -89,11 +93,11 @@ func main() {
 		fmt.Println(i.Val)
 	})
 
-	// `Pipe` composes pipeables together, returning a new pipeable
+	// `Pipe` composes pipelines together, returning a new pipeline.
 	p := rivo.Pipe3(in, onlyEven, log)
 
-	// By passing a context and an input channel to our pipeable, we can get the output stream.
-	// Since our first pipeable `in` is a generator and does not depend on an input stream, we can pass a nil channel.
+	// By passing a context and an input channel to our pipeline, we can get the output stream.
+	// Since our first pipeline `in` is a generator and does not depend on an input stream, we can pass a nil channel.
 	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
 	<-p(ctx, nil)
 
@@ -103,54 +107,54 @@ func main() {
 }
 ```
 
-## Pipeable factories
+## Pipeline factories
 
-`rivo` comes with a set of built-in pipeable factories.
+`rivo` comes with a set of built-in pipeline factories.
 
 ### Generators
-- `Of`: returns a pipeable which returns a stream that will emit the provided values;
-- `FromFunc`: returns a pipeable which returns a stream that will emit the values returned by the provided function;
-- `FromSeq` and `FromSeq2`: returns a pipeable which returns a stream that will emit the values from the provided iterator;
+- `Of`: returns a pipeline which returns a stream that will emit the provided values;
+- `FromFunc`: returns a pipeline which returns a stream that will emit the values returned by the provided function;
+- `FromSeq` and `FromSeq2`: returns a pipeline which returns a stream that will emit the values from the provided iterator;
 
 ### Sinks
-- `Do`: returns a pipeable which performs a side effect for each item in the input stream;
+- `Do`: returns a pipeline which performs a side effect for each item in the input stream;
 
 ### Transformers
-- `Filter`: returns a pipeable which filters the input stream using the given function;
-- `Map`: returns a pipeable which maps the input stream using the given function;
-- `ForEach`: returns a pipeable which applies the given function to each item in the input stream and forwards only the errors;
-- `Batch`: returns a pipeable which groups the input stream into batches of the provided size;
-- `Flatten`: returns a pipeable which flattens the input stream of slices; 
+- `Filter`: returns a pipeline which filters the input stream using the given function;
+- `Map`: returns a pipeline which maps the input stream using the given function;
+- `ForEach`: returns a pipeline which applies the given function to each item in the input stream and forwards only the errors;
+- `Batch`: returns a pipeline which groups the input stream into batches of the provided size;
+- `Flatten`: returns a pipeline which flattens the input stream of slices; 
 
-Besides these, the directories of the library contain more specialized pipeables factories.
+Besides these, the directories of the library contain more specialized pipelines factories.
 
 ### Package `rivo/io`
 
-- `FromReader`: returns a pipeable which reads from the provided `io.Reader` and emits the read bytes;
-- `ToWriter`: returns a pipeable which writes the input stream to the provided `io.Writer`;
+- `FromReader`: returns a pipeline which reads from the provided `io.Reader` and emits the read bytes;
+- `ToWriter`: returns a pipeline which writes the input stream to the provided `io.Writer`;
 
 ### Package `rivo/bufio`
 
-- `FromScanner`: returns a pipeable which reads from the provided `bufio.Scanner` and emits the scanned items;
-- `ToScanner`: returns a pipeable which writes the input stream to the provided `bufio.Writer`;
+- `FromScanner`: returns a pipeline which reads from the provided `bufio.Scanner` and emits the scanned items;
+- `ToScanner`: returns a pipeline which writes the input stream to the provided `bufio.Writer`;
 
 ### Package `rivo/csv`
 
-- `FromReader`: returns a pipeable which reads from the provided `csv.Reader` and emits the read records;
-- `ToWriter`: returns a pipeable which writes the input stream to the provided `csv.Writer`;
+- `FromReader`: returns a pipeline which reads from the provided `csv.Reader` and emits the read records;
+- `ToWriter`: returns a pipeline which writes the input stream to the provided `csv.Writer`;
 
 ### Package `rivio/errors`
 
-- `WithErrorHandler`: returns a pipeable that connects the input pipeable to an error handling pipeable.
+- `WithErrorHandler`: returns a pipeline that connects the input pipeline to an error handling pipeline.
 
 ## Optional parameters
 
-Many pipeable factories accepts a common set of optional parameters. These can be provided via functional options.
+Many pipeline factories accepts a common set of optional parameters. These can be provided via functional options.
 
 ```go
   double := rivo.Map(
 	  func(ctx context.Context, i rivo.Item[int]) (int, error) { return i.Val * 2, nil  },
-	  // `Pass additional options to the pipeable
+	  // `Pass additional options to the pipeline
 	  rivo.WithBufferSize(1), 
 	  rivo.WithPoolSize(runtime.NumCPU()), 
 	  )
@@ -160,28 +164,21 @@ The currently available options are:
 
 - `WithPoolSize(int)`: sets the number of goroutines that will be used to process items. Default is 1.
 - `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
-- `WithStopOnError(bool)`: if true, the pipeable will stop processing items when an error is encountered. Default is false.
+- `WithStopOnError(bool)`: if true, the pipeline will stop processing items when an error is encountered. Default is false.
 - `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
 
-## Higher order pipeables
+## Special pipelines
 
-`rivo` also provides a set of higher order pipeables, which are pipeables that take other pipeables as arguments.
+`rivo` also provides a set of special pipelines:
 
-- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeable which composes the provided pipeables together;
+- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
 - `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
-- `Segregate`: returns a function that returns two pipeables, where the first pipeable emits items that pass the predicate, and the second pipeable emits items that do not pass the predicate.
-
-## Utilities
-
-`rivo` also comes with a set of utilities which cannot be expressed as pipeables but can be useful when working with streams:
-
-- `OrDone`: returns a channel which will be closed when the provided context is done;
-- `Tee` and `TeeN`: returns n streams that each receive a copy of each item from the input stream;
-
+- `Segregate`: returns a function that returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
+- `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
 
 ## Error handling
 
-As mentioned, each values contains a value and an optional error. You can handle error either individually inside pipeables' callbacks like `Map` or `Do` or
+As mentioned, each values contains a value and an optional error. You can handle error either individually inside pipelines' callbacks like `Map` or `Do` or
 (recommended) create dedicated pipelines for error handling. See `examples/errorHanlidng` for this regard.
 
 ## Examples
@@ -196,8 +193,10 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 
 ## Roadmap
 
-- [ ] Review docs, in particular where "pipeable" is used instead of "generator", "sink" or "transformer"
-- [ ] Add more pipeables, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
+- [ ] Review docs, in particular where "pipeline" is used instead of "generator", "sink" or "transformer"
+- [ ] Remove current dedicated folders for special pipelines and move them to the main package
+- [ ] Consider dedicated options for each pipeline instead of a common set of options
+- [ ] Add more pipelines, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Tap 
   - [ ] Better error handling
   - [ ] Time-based
