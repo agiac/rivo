@@ -43,7 +43,7 @@ func main() {
 
 	<-rivo.Connect(rivo.Pipe(errs, handleErrors), rivo.Pipe(vals, handleValues))(ctx, nil)
 
-	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently:
+	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):
 	// Value: 2
 	// Value: 4
 	// Error: strconv.Atoi: parsing "3_": invalid syntax
