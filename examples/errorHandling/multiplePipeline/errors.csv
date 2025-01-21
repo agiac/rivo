@@ -1,0 +1,3 @@
+"strconv.Atoi: parsing ""3_"": invalid syntax"
+"strconv.Atoi: parsing ""6**"": invalid syntax"
+"strconv.Atoi: parsing ""?"": invalid syntax"

@@ -40,3 +40,9 @@ func Segregate[T, U any](p Pipeline[T, U], predicate func(ctx context.Context, i
 		return p1, p2
 	}
 }
+
+func SegregateErrors[T, U any](p Pipeline[T, U]) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
+	return Segregate(p, func(ctx context.Context, item Item[U]) bool {
+		return item.Err != nil
+	})
+}

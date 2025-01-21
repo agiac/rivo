@@ -19,13 +19,13 @@ func TeeN[T, U any](p Pipeline[T, U], n int) func(context.Context, Stream[T]) []
 	}
 
 	return func(ctx context.Context, s Stream[T]) []Pipeline[None, U] {
-		teeS := teeStream(ctx, s, n)
+		teeS := TeeStream(ctx, p(ctx, s), n)
 
 		pipes := make([]Pipeline[None, U], n)
 		for i := 0; i < n; i++ {
 			tee := teeS[i]
 			pipes[i] = func(ctx context.Context, _ Stream[None]) Stream[U] {
-				return p(ctx, tee)
+				return tee
 			}
 		}
 
@@ -33,8 +33,8 @@ func TeeN[T, U any](p Pipeline[T, U], n int) func(context.Context, Stream[T]) []
 	}
 }
 
-// teeStream returns n streams that each receive a copy of each item from the input stream.
-func teeStream[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
+// TeeStream returns n streams that each receive a copy of each item from the input stream.
+func TeeStream[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}
