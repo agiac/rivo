@@ -125,6 +125,10 @@ func main() {
 - `ForEach`: returns a pipeline which applies the given function to each item in the input stream and forwards only the errors;
 - `Batch`: returns a pipeline which groups the input stream into batches of the provided size;
 - `Flatten`: returns a pipeline which flattens the input stream of slices; 
+- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
+- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
+- `Segregate`: returns a function that returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
+- `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
 
 Besides these, the directories of the library contain more specialized pipelines factories.
 
@@ -167,14 +171,8 @@ The currently available options are:
 - `WithStopOnError(bool)`: if true, the pipeline will stop processing items when an error is encountered. Default is false.
 - `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
 
-## Special pipelines
 
-`rivo` also provides a set of special pipelines:
 
-- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
-- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
-- `Segregate`: returns a function that returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
-- `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
 
 ## Error handling
 

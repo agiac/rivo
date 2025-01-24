@@ -19,5 +19,7 @@ type Item[T any] struct {
 // Stream represents a data stream of items. It is a read only channel of Item[T].
 type Stream[T any] <-chan Item[T]
 
+type ErrorStream = Stream[struct{}]
+
 // Pipeline is a function that takes a context and a stream and returns a stream of the same type or a different type.
 type Pipeline[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]

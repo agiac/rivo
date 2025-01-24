@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	. "github.com/agiac/rivo"
-	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
+
+	. "github.com/agiac/rivo"
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleDo() {
@@ -86,33 +87,12 @@ func TestDo(t *testing.T) {
 
 		d := Do(func(ctx context.Context, i Item[int32]) {
 			count.Add(1)
-		}, WithPoolSize(3))
+		}, DoPoolSize(3))
 
 		p := Pipe(g, d)
 
 		<-p(ctx, nil)
 
 		assert.Equal(t, int32(5), count.Load())
-	})
-
-	t.Run("with on before close", func(t *testing.T) {
-		ctx := context.Background()
-
-		count := atomic.Int32{}
-
-		g := Of[int32](1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i Item[int32]) {
-			count.Add(1)
-		}, WithOnBeforeClose(func(ctx context.Context) error {
-			count.Add(1)
-			return nil
-		}))
-
-		p := Pipe(g, d)
-
-		<-p(ctx, nil)
-
-		assert.Equal(t, int32(6), count.Load())
 	})
 }

@@ -15,7 +15,7 @@ func ExampleBatch() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	b := Batch[int](2, time.Second)
+	b := Batch[int](2)
 
 	p := Pipe(in, b)
 
@@ -35,7 +35,7 @@ func TestBatch(t *testing.T) {
 
 		in := Of(1, 2, 3, 4, 5, 6)
 
-		b := Batch[int](2, time.Second)
+		b := Batch[int](2)
 
 		got := Collect(Pipe(in, b)(ctx, nil))
 
@@ -62,7 +62,7 @@ func TestBatch(t *testing.T) {
 			in <- Item[int]{Val: 3}
 		}()
 
-		b := Batch[int](10, 100*time.Millisecond)
+		b := Batch[int](10, BatchMaxWait(100*time.Millisecond))
 
 		got := Collect(b(ctx, in))
 
@@ -87,7 +87,7 @@ func TestBatch(t *testing.T) {
 			in <- Item[int]{Val: 2}
 		}()
 
-		b := Batch[int](2, time.Second)
+		b := Batch[int](2)
 
 		got := Collect(b(ctx, in))
 
@@ -115,7 +115,7 @@ func TestBatch(t *testing.T) {
 			in <- Item[int]{Val: 5}
 		}()
 
-		b := Batch[int](2, time.Second)
+		b := Batch[int](2)
 
 		got := Collect(b(ctx, in))
 
@@ -128,7 +128,7 @@ func TestBatch(t *testing.T) {
 
 		in := Of(1, 2, 3)
 
-		b := Batch[int](2, time.Second, WithBufferSize(3))
+		b := Batch[int](2, BatchBufferSize(3))
 
 		out := Pipe(in, b)(ctx, nil)
 
@@ -141,60 +141,5 @@ func TestBatch(t *testing.T) {
 
 		assert.Equal(t, 3, cap(out))
 		assert.Equal(t, want, got)
-	})
-
-	t.Run("with pool size", func(t *testing.T) {
-		t.Skip("not implemented")
-	})
-
-	t.Run("with stop on error", func(t *testing.T) {
-		ctx := context.Background()
-
-		in := make(chan Item[int])
-
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Err: fmt.Errorf("error")}
-			in <- Item[int]{Val: 2}
-		}()
-
-		b := Batch[int](2, time.Second, WithStopOnError(true))
-
-		got := Collect(b(ctx, in))
-
-		want := []Item[[]int]{
-			{Err: fmt.Errorf("error")},
-			{Val: []int{1}},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("with on before close", func(t *testing.T) {
-		ctx := context.Background()
-
-		in := make(chan Item[int])
-
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-		}()
-
-		var called bool
-		b := Batch[int](2, time.Second, WithOnBeforeClose(func(ctx context.Context) error {
-			called = true
-			return nil
-		}))
-
-		got := Collect(b(ctx, in))
-
-		want := []Item[[]int]{
-			{Val: []int{1, 2}},
-		}
-
-		assert.Equal(t, want, got)
-		assert.True(t, called)
 	})
 }

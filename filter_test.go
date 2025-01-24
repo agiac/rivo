@@ -3,9 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func ExampleFilter() {
@@ -131,7 +132,7 @@ func TestFilter(t *testing.T) {
 			in <- Item[int]{Val: 3}
 		}()
 
-		f := Filter(filterFn, WithBufferSize(3))
+		f := Filter(filterFn, FilterBufferSize(3))
 
 		out := f(ctx, in)
 
@@ -154,7 +155,7 @@ func TestFilter(t *testing.T) {
 
 		in := Of(1, 2, 3, 4, 5)
 
-		f := Filter(filterFn, WithPoolSize(3))
+		f := Filter(filterFn, FilterPoolSize(3))
 
 		got := Collect(Pipe(in, f)(ctx, nil))
 
@@ -164,55 +165,5 @@ func TestFilter(t *testing.T) {
 		}
 
 		assert.ElementsMatch(t, want, got)
-	})
-
-	t.Run("with stop on error", func(t *testing.T) {
-		ctx := context.Background()
-
-		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
-			if i.Val == 3 {
-				return false, assert.AnError
-			}
-			return i.Val%2 == 0, nil
-		}
-
-		in := Of(1, 2, 3, 4, 5)
-
-		f := Filter(filterFn, WithStopOnError(true))
-
-		got := Collect(Pipe(in, f)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Err: assert.AnError},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("with on before close", func(t *testing.T) {
-		ctx := context.Background()
-
-		filterFn := func(ctx context.Context, i Item[int]) (bool, error) {
-			return i.Val%2 == 0, nil
-		}
-
-		g := Of(1, 2, 3, 4, 5)
-
-		onBeforeCloseCalled := false
-		f := Filter(filterFn, WithOnBeforeClose(func(ctx context.Context) error {
-			onBeforeCloseCalled = true
-			return nil
-		}))
-
-		got := Collect(Pipe(g, f)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 4},
-		}
-
-		assert.Equal(t, want, got)
-		assert.True(t, onBeforeCloseCalled)
 	})
 }
