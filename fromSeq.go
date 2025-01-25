@@ -5,22 +5,26 @@ import (
 	"iter"
 )
 
-func FromSeq[T any](seq iter.Seq[T], opt ...Option) Pipeline[None, T] {
-	next, stop := iter.Pull(seq)
-	return FromFunc[T](
-		func(ctx context.Context) (T, error) {
-			v, ok := next()
-			if !ok {
-				return v, ErrEOS
-			}
+func FromSeq[T any](seq iter.Seq[T]) Pipeline[None, T] {
+	return func(ctx context.Context, in Stream[None]) Stream[T] {
+		out := make(chan Item[T])
 
-			return v, nil
-		},
-		append(opt, WithOnBeforeClose(func(ctx context.Context) error {
-			stop()
-			return nil
-		}))...,
-	)
+		go func() {
+			defer close(out)
+
+			for v := range seq {
+				select {
+				case <-ctx.Done():
+					out <- Item[T]{Err: ctx.Err()}
+					return
+				default:
+					out <- Item[T]{Val: v}
+				}
+			}
+		}()
+
+		return out
+	}
 }
 
 type FromSeq2Value[T, U any] struct {
@@ -28,20 +32,24 @@ type FromSeq2Value[T, U any] struct {
 	Val2 U
 }
 
-func FromSeq2[T, U any](seq iter.Seq2[T, U], opts ...Option) Pipeline[None, FromSeq2Value[T, U]] {
-	next, stop := iter.Pull2(seq)
-	return FromFunc[FromSeq2Value[T, U]](
-		func(ctx context.Context) (FromSeq2Value[T, U], error) {
-			v1, v2, ok := next()
-			if !ok {
-				return FromSeq2Value[T, U]{Val1: v1, Val2: v2}, ErrEOS
-			}
+func FromSeq2[T, U any](seq iter.Seq2[T, U]) Pipeline[None, FromSeq2Value[T, U]] {
+	return func(ctx context.Context, in Stream[None]) Stream[FromSeq2Value[T, U]] {
+		out := make(chan Item[FromSeq2Value[T, U]])
 
-			return FromSeq2Value[T, U]{Val1: v1, Val2: v2}, nil
-		},
-		append(opts, WithOnBeforeClose(func(ctx context.Context) error {
-			stop()
-			return nil
-		}))...,
-	)
+		go func() {
+			defer close(out)
+
+			for v1, v2 := range seq {
+				select {
+				case <-ctx.Done():
+					out <- Item[FromSeq2Value[T, U]]{Err: ctx.Err()}
+					return
+				default:
+					out <- Item[FromSeq2Value[T, U]]{Val: FromSeq2Value[T, U]{Val1: v1, Val2: v2}}
+				}
+			}
+		}()
+
+		return out
+	}
 }

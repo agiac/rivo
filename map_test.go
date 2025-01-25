@@ -141,7 +141,7 @@ func TestMap(t *testing.T) {
 			in <- Item[int]{Val: 3}
 		}()
 
-		m := Map(mapFn, WithBufferSize(3))
+		m := Map(mapFn, MapBufferSize(3))
 
 		out := m(ctx, in)
 
@@ -166,7 +166,7 @@ func TestMap(t *testing.T) {
 
 		in := Of(1, 2, 3, 4, 5)
 
-		m := Map(mapFn, WithPoolSize(3))
+		m := Map(mapFn, MapPoolSize(3))
 
 		got := Collect(Pipe(in, m)(ctx, nil))
 
@@ -179,78 +179,5 @@ func TestMap(t *testing.T) {
 		}
 
 		assert.ElementsMatch(t, want, got)
-	})
-
-	t.Run("with stop on error", func(t *testing.T) {
-		ctx := context.Background()
-
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Val == 3 {
-				return 0, assert.AnError
-			}
-			return i.Val + 1, nil
-		}
-
-		in := Of(1, 2, 3, 4, 5)
-
-		m := Map(mapFn, WithStopOnError(true))
-
-		got := Collect(Pipe(in, m)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Err: assert.AnError},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("with on before close", func(t *testing.T) {
-		ctx := context.Background()
-
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		}
-
-		in := Of(1, 2, 3, 4, 5)
-
-		beforeCloseCalled := false
-
-		m := Map(mapFn, WithOnBeforeClose(func(ctx context.Context) error {
-			beforeCloseCalled = true
-			return nil
-		}))
-
-		_ = Collect(Pipe(in, m)(ctx, nil))
-
-		assert.True(t, beforeCloseCalled)
-	})
-
-	t.Run("with on before close error", func(t *testing.T) {
-		ctx := context.Background()
-
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
-		}
-
-		in := Of(1, 2, 3, 4, 5)
-
-		m := Map(mapFn, WithOnBeforeClose(func(ctx context.Context) error {
-			return assert.AnError
-		}))
-
-		got := Collect(Pipe(in, m)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-			{Val: 6},
-			{Err: assert.AnError},
-		}
-
-		assert.Equal(t, want, got)
 	})
 }

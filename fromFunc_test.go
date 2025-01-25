@@ -129,7 +129,7 @@ func TestFromFunc(t *testing.T) {
 			return count, nil
 		}
 
-		f := FromFunc(genFn, WithBufferSize(3))
+		f := FromFunc(genFn, FromFuncBufferSize(3))
 
 		out := f(ctx, nil)
 
@@ -156,7 +156,7 @@ func TestFromFunc(t *testing.T) {
 			return v, nil
 		}
 
-		f := FromFunc(genFn, WithPoolSize(3))
+		f := FromFunc(genFn, FromFuncPoolSize(3))
 
 		got := Collect(f(ctx, nil))
 
@@ -169,33 +169,6 @@ func TestFromFunc(t *testing.T) {
 		}
 
 		assert.ElementsMatch(t, want, got)
-	})
-
-	t.Run("with stop on error", func(t *testing.T) {
-		ctx := context.Background()
-		count := 0
-		genFn := func(ctx context.Context) (int, error) {
-			count++
-			if count == 3 {
-				return 0, assert.AnError
-			}
-			if count > 5 {
-				return 0, ErrEOS
-			}
-			return count, nil
-		}
-
-		f := FromFunc(genFn, WithStopOnError(true))
-
-		got := Collect(f(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Err: assert.AnError},
-		}
-
-		assert.Equal(t, want, got)
 	})
 
 	t.Run("with on before close", func(t *testing.T) {
@@ -211,7 +184,7 @@ func TestFromFunc(t *testing.T) {
 
 		beforeCloseCalled := false
 
-		f := FromFunc(genFn, WithOnBeforeClose(func(ctx context.Context) error {
+		f := FromFunc(genFn, FromFuncOnBeforeClose(func(ctx context.Context) error {
 			beforeCloseCalled = true
 			return nil
 		}))

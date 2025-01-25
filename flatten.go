@@ -7,7 +7,7 @@ import (
 // Flatten returns a Pipeline that flattens a Stream of slices into a Stream of individual items.
 func Flatten[T any]() Pipeline[[]T, T] {
 	return func(ctx context.Context, in Stream[[]T]) Stream[T] {
-		out := make(chan Item[T], 0)
+		out := make(chan Item[T])
 
 		go func() {
 			defer close(out)
