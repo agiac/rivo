@@ -41,8 +41,9 @@ func Segregate[T, U any](p Pipeline[T, U], predicate func(ctx context.Context, i
 	}
 }
 
+// SegregateErrors returns a function that returns two pipeline, where the first pipeline emits items without errors, and the second pipeline emits items with errors.
 func SegregateErrors[T, U any](p Pipeline[T, U]) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
 	return Segregate(p, func(ctx context.Context, item Item[U]) bool {
-		return item.Err != nil
+		return item.Err == nil
 	})
 }

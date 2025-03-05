@@ -173,19 +173,19 @@ func TestFromFunc(t *testing.T) {
 
 	t.Run("with on before close", func(t *testing.T) {
 		ctx := context.Background()
-		count := 0
+		count := atomic.Int32{}
 		genFn := func(ctx context.Context) (int, error) {
-			count++
-			if count > 5 {
+			n := count.Add(1)
+			if n > 5 {
 				return 0, ErrEOS
 			}
-			return count, nil
+			return int(n), nil
 		}
 
-		beforeCloseCalled := false
+		beforeCloseCalled := atomic.Bool{}
 
 		f := FromFunc(genFn, FromFuncOnBeforeClose(func(ctx context.Context) error {
-			beforeCloseCalled = true
+			beforeCloseCalled.Store(true)
 			return nil
 		}))
 
@@ -200,6 +200,6 @@ func TestFromFunc(t *testing.T) {
 		}
 
 		assert.Equal(t, want, got)
-		assert.True(t, beforeCloseCalled)
+		assert.True(t, beforeCloseCalled.Load())
 	})
 }

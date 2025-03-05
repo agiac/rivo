@@ -122,7 +122,6 @@ func main() {
 ### Transformers
 - `Filter`: returns a pipeline which filters the input stream using the given function;
 - `Map`: returns a pipeline which maps the input stream using the given function;
-- `ForEach`: returns a pipeline which applies the given function to each item in the input stream and forwards only the errors;
 - `Batch`: returns a pipeline which groups the input stream into batches of the provided size;
 - `Flatten`: returns a pipeline which flattens the input stream of slices; 
 - `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;

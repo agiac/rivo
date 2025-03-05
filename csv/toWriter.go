@@ -9,7 +9,7 @@ import (
 
 // ToWriter returns a pipeline that writes to a csv.Writer. Only errors from the
 // csv.Writer are passed to the output stream.
-func ToWriter(w *csv.Writer, opts ...rivo.Option) rivo.Pipeline[[]string, struct{}] {
+func ToWriter(w *csv.Writer) rivo.Pipeline[[]string, struct{}] {
 	return func(ctx context.Context, in rivo.Stream[[]string]) rivo.Stream[struct{}] {
 		out := make(chan rivo.Item[struct{}])
 
