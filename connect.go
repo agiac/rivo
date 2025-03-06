@@ -14,7 +14,7 @@ func Connect[A any](pp ...Pipeline[A, None]) Pipeline[A, None] {
 		go func() {
 			defer close(out)
 
-			ins := teeStream(context.Background(), in, len(pp))
+			ins := teeStream(in, len(pp))
 
 			wg := sync.WaitGroup{}
 			wg.Add(len(pp))

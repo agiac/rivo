@@ -8,21 +8,37 @@ import (
 )
 
 // FromReader returns a pipeline that reads from an io.Reader.
-// It's not thread-safe to use a pool size greater than 1.
-func FromReader(r io.Reader, opt ...rivo.Option) rivo.Pipeline[rivo.None, []byte] {
-	buf := make([]byte, 1024)
-	return rivo.FromFunc[[]byte](func(ctx context.Context) ([]byte, error) {
-		n, err := r.Read(buf)
-		if err != nil {
-			if err == io.EOF {
-				return nil, rivo.ErrEOS
+func FromReader(r io.Reader) rivo.Pipeline[rivo.None, []byte] {
+	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[[]byte] {
+		out := make(chan rivo.Item[[]byte])
+
+		go func() {
+			defer close(out)
+
+			buf := make([]byte, 1024)
+
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err == io.EOF {
+						return
+					}
+					out <- rivo.Item[[]byte]{Err: err}
+					continue
+				}
+
+				val := make([]byte, n)
+				copy(val, buf[:n])
+
+				select {
+				case <-ctx.Done():
+					out <- rivo.Item[[]byte]{Err: ctx.Err()}
+					return
+				case out <- rivo.Item[[]byte]{Val: val}:
+				}
 			}
-			return nil, err
-		}
+		}()
 
-		val := make([]byte, n)
-		copy(val, buf[:n])
-
-		return val, nil
-	}, opt...)
+		return out
+	}
 }

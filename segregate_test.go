@@ -21,9 +21,9 @@ func ExampleSegregate() {
 
 	p := rivo.Pipe(g, toInt)
 
-	even, odd := rivo.Segregate(p, func(ctx context.Context, item rivo.Item[int]) bool {
+	even, odd := rivo.Segregate(p, func(item rivo.Item[int]) bool {
 		return item.Val%2 == 0
-	})(ctx, nil)
+	})
 
 	evens := make([]int, 0)
 	odds := make([]int, 0)
@@ -60,9 +60,9 @@ func TestSegregate(t *testing.T) {
 
 	p := rivo.Pipe(g, toInt)
 
-	even, odd := rivo.Segregate(p, func(ctx context.Context, item rivo.Item[int]) bool {
+	even, odd := rivo.Segregate(p, func(item rivo.Item[int]) bool {
 		return item.Val%2 == 0
-	})(ctx, nil)
+	})
 
 	evens := make([]int, 0)
 	odds := make([]int, 0)

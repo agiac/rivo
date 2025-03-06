@@ -9,19 +9,37 @@ import (
 
 // ToWriter returns a pipeline that writes to a csv.Writer. Only errors from the
 // csv.Writer are passed to the output stream.
-func ToWriter(w *csv.Writer, opts ...rivo.Option) rivo.Pipeline[[]string, struct{}] {
-	writeRow := func(ctx context.Context, i rivo.Item[[]string]) error {
-		if i.Err != nil {
-			return i.Err
-		}
+func ToWriter(w *csv.Writer) rivo.Pipeline[[]string, struct{}] {
+	return func(ctx context.Context, in rivo.Stream[[]string]) rivo.Stream[struct{}] {
+		out := make(chan rivo.Item[struct{}])
 
-		return w.Write(i.Val)
+		go func() {
+			defer close(out)
+			defer w.Flush()
+
+			for item := range rivo.OrDone(ctx, in) {
+				if item.Err != nil {
+					select {
+					case <-ctx.Done():
+						out <- rivo.Item[struct{}]{Err: ctx.Err()}
+						return
+					case out <- rivo.Item[struct{}]{Err: item.Err}:
+					}
+					continue
+				}
+
+				if err := w.Write(item.Val); err != nil {
+					select {
+					case <-ctx.Done():
+						out <- rivo.Item[struct{}]{Err: ctx.Err()}
+						return
+					case out <- rivo.Item[struct{}]{Err: err}:
+
+					}
+				}
+			}
+		}()
+
+		return out
 	}
-
-	flush := func(ctx context.Context) error {
-		w.Flush()
-		return w.Error()
-	}
-
-	return rivo.ForEach(writeRow, append(opts, rivo.WithOnBeforeClose(flush))...)
 }

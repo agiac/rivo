@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// `Pass additional options to the pipeline
-	double := rivo.Map(doubleFn, rivo.WithBufferSize(1), rivo.WithStopOnError(true))
+	double := rivo.Map(doubleFn, rivo.MapBufferSize(1))
 
 	p := rivo.Pipe(in, double)
 
@@ -47,4 +47,6 @@ func main() {
 	// 2
 	// 4
 	// ERROR: some error
+	// 8
+	// 10
 }

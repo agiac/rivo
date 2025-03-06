@@ -98,7 +98,7 @@ func main() {
 
 	// By passing a context and an input channel to our pipeline, we can get the output stream.
 	// Since our first pipeline `in` is a generator and does not depend on an input stream, we can pass a nil channel.
-	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
+	// Also, since log is a sink, we only have to read once from the output channel to know that the pipeline has finished.
 	<-p(ctx, nil)
 
 	// Expected output:
@@ -115,6 +115,9 @@ func main() {
 - `Of`: returns a pipeline which returns a stream that will emit the provided values;
 - `FromFunc`: returns a pipeline which returns a stream that will emit the values returned by the provided function;
 - `FromSeq` and `FromSeq2`: returns a pipeline which returns a stream that will emit the values from the provided iterator;
+- `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
+- `Segregate`:  returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate;
+- `SegregateErrors`: returns two pipelines, where the first pipeline emits items without errors, and the second pipeline emits items with errors;
 
 ### Sinks
 - `Do`: returns a pipeline which performs a side effect for each item in the input stream;
@@ -122,9 +125,10 @@ func main() {
 ### Transformers
 - `Filter`: returns a pipeline which filters the input stream using the given function;
 - `Map`: returns a pipeline which maps the input stream using the given function;
-- `ForEach`: returns a pipeline which applies the given function to each item in the input stream and forwards only the errors;
 - `Batch`: returns a pipeline which groups the input stream into batches of the provided size;
 - `Flatten`: returns a pipeline which flattens the input stream of slices; 
+- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
+- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
 
 Besides these, the directories of the library contain more specialized pipelines factories.
 
@@ -143,38 +147,12 @@ Besides these, the directories of the library contain more specialized pipelines
 - `FromReader`: returns a pipeline which reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a pipeline which writes the input stream to the provided `csv.Writer`;
 
-### Package `rivio/errors`
+### Package `rivo/aws/dynamodb`
 
-- `WithErrorHandler`: returns a pipeline that connects the input pipeline to an error handling pipeline.
-
-## Optional parameters
-
-Many pipeline factories accepts a common set of optional parameters. These can be provided via functional options.
-
-```go
-  double := rivo.Map(
-	  func(ctx context.Context, i rivo.Item[int]) (int, error) { return i.Val * 2, nil  },
-	  // `Pass additional options to the pipeline
-	  rivo.WithBufferSize(1), 
-	  rivo.WithPoolSize(runtime.NumCPU()), 
-	  )
-```
-
-The currently available options are:
-
-- `WithPoolSize(int)`: sets the number of goroutines that will be used to process items. Default is 1.
-- `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
-- `WithStopOnError(bool)`: if true, the pipeline will stop processing items when an error is encountered. Default is false.
-- `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
-
-## Special pipelines
-
-`rivo` also provides a set of special pipelines:
-
-- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
-- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
-- `Segregate`: returns a function that returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
-- `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
+- `Scan`
+- `ScanItems`
+- `BatchWrite`
+- `BatchPutItems`
 
 ## Error handling
 
@@ -194,11 +172,8 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 ## Roadmap
 
 - [ ] Review docs, in particular where "pipeline" is used instead of "generator", "sink" or "transformer"
-- [ ] Remove current dedicated folders for special pipelines and move them to the main package
-- [ ] Consider dedicated options for each pipeline instead of a common set of options
 - [ ] Add more pipelines, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Tap 
-  - [ ] Better error handling
   - [ ] Time-based
   - [ ] SQL
   - [ ] AWS
@@ -206,7 +181,6 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 - [ ] Add more utilities
   - [ ] Merge
 - [ ] Add more examples
-- [ ] Error handling section in the README
 
 ## License
 
