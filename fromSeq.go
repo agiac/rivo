@@ -17,8 +17,7 @@ func FromSeq[T any](seq iter.Seq[T]) Pipeline[None, T] {
 				case <-ctx.Done():
 					out <- Item[T]{Err: ctx.Err()}
 					return
-				default:
-					out <- Item[T]{Val: v}
+				case out <- Item[T]{Val: v}:
 				}
 			}
 		}()
@@ -44,8 +43,7 @@ func FromSeq2[T, U any](seq iter.Seq2[T, U]) Pipeline[None, FromSeq2Value[T, U]]
 				case <-ctx.Done():
 					out <- Item[FromSeq2Value[T, U]]{Err: ctx.Err()}
 					return
-				default:
-					out <- Item[FromSeq2Value[T, U]]{Val: FromSeq2Value[T, U]{Val1: v1, Val2: v2}}
+				case out <- Item[FromSeq2Value[T, U]]{Val: FromSeq2Value[T, U]{Val1: v1, Val2: v2}}:
 				}
 			}
 		}()

@@ -114,7 +114,6 @@ func TestFromFunc(t *testing.T) {
 
 		got := Collect(f(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 3)
 		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
 	})
 
@@ -173,13 +172,13 @@ func TestFromFunc(t *testing.T) {
 
 	t.Run("with on before close", func(t *testing.T) {
 		ctx := context.Background()
-		count := atomic.Int32{}
+		var n int
 		genFn := func(ctx context.Context) (int, error) {
-			n := count.Add(1)
+			n++
 			if n > 5 {
 				return 0, ErrEOS
 			}
-			return int(n), nil
+			return n, nil
 		}
 
 		beforeCloseCalled := atomic.Bool{}

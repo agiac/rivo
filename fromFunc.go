@@ -38,8 +38,7 @@ func FromFunc[T any](f func(context.Context) (T, error), options ...FromFuncOpti
 						case <-ctx.Done():
 							out <- Item[T]{Err: ctx.Err()}
 							return
-						default:
-							out <- Item[T]{Val: v, Err: err}
+						case out <- Item[T]{Val: v, Err: err}:
 						}
 					}
 				}()
@@ -90,13 +89,15 @@ func FromFuncOnBeforeClose(f func(context.Context) error) FromFuncOption {
 	}
 }
 
-var defaultFromFuncOptions = fromFuncOptions{
-	poolSize:   1,
-	bufferSize: 0,
+func newDefaultFromFuncOptions() *fromFuncOptions {
+	return &fromFuncOptions{
+		poolSize:   1,
+		bufferSize: 0,
+	}
 }
 
 func applyFromFuncOptions(opts []FromFuncOption) (*fromFuncOptions, error) {
-	o := &defaultFromFuncOptions
+	o := newDefaultFromFuncOptions()
 	for _, opt := range opts {
 		if err := opt(o); err != nil {
 			return nil, err

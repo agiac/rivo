@@ -117,22 +117,24 @@ func BatchBufferSize(n int) BatchOption {
 	}
 }
 
-var defaultBatchOptions = batchOptions{
-	maxWait:    1 * time.Second,
-	bufferSize: 0,
+func newDefaultBatchOptions() *batchOptions {
+	return &batchOptions{
+		maxWait:    1 * time.Second,
+		bufferSize: 0,
+	}
 }
 
-func applyBatchOptions(opt []BatchOption) (batchOptions, error) {
-	opts := defaultBatchOptions
+func applyBatchOptions(opt []BatchOption) (*batchOptions, error) {
+	opts := newDefaultBatchOptions()
 	for _, o := range opt {
-		if err := o(&opts); err != nil {
+		if err := o(opts); err != nil {
 			return opts, err
 		}
 	}
 	return opts, nil
 }
 
-func assertBatchOptions(opt []BatchOption) batchOptions {
+func assertBatchOptions(opt []BatchOption) *batchOptions {
 	opts, err := applyBatchOptions(opt)
 	if err != nil {
 		panic(fmt.Errorf("invalid batch options: %v", err))

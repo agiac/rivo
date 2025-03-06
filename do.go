@@ -55,21 +55,23 @@ func DoPoolSize(n int) DoOption {
 	}
 }
 
-var doDefaultOptions = doOptions{
-	poolSize: 1,
+func newDefaultDoOptions() *doOptions {
+	return &doOptions{
+		poolSize: 1,
+	}
 }
 
-func applyDoOptions(opt []DoOption) (doOptions, error) {
-	opts := doDefaultOptions
+func applyDoOptions(opt []DoOption) (*doOptions, error) {
+	opts := newDefaultDoOptions()
 	for _, o := range opt {
-		if err := o(&opts); err != nil {
+		if err := o(opts); err != nil {
 			return opts, err
 		}
 	}
 	return opts, nil
 }
 
-func assertDoOptions(opt []DoOption) doOptions {
+func assertDoOptions(opt []DoOption) *doOptions {
 	opts, err := applyDoOptions(opt)
 	if err != nil {
 		panic(fmt.Sprintf("invalid Do options: %v", err))
