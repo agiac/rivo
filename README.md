@@ -1,5 +1,7 @@
 # rivo
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/agiac/rivo.svg)](https://pkg.go.dev/github.com/agiac/rivo)
+
 `rivo` is a library for stream processing in Go.
 
 **NOTE: THIS LIBRARY IS STILL IN ACTIVE DEVELOPMENT AND IS NOT YET PRODUCTION READY.**
