@@ -21,7 +21,7 @@ func main() {
 
 	vals, errs := rivo.SegregateErrors(ParseAndDouble())(ctx, nil)
 
-	errs1, errs2 := rivo.Tee(errs)(ctx, nil)
+	errs1, errs2 := rivo.Tee(errs)
 
 	<-rivo.Connect(
 		rivo.Pipe(vals, LogValues()),

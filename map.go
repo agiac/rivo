@@ -70,11 +70,15 @@ func MapBufferSize(bufferSize int) MapOption {
 	}
 }
 
-func applyMapOptions(opts []MapOption) (*mapOptions, error) {
-	o := &mapOptions{
+func newDefaultMapOptions() *mapOptions {
+	return &mapOptions{
 		poolSize:   1,
 		bufferSize: 0,
 	}
+}
+
+func applyMapOptions(opts []MapOption) (*mapOptions, error) {
+	o := newDefaultMapOptions()
 
 	for _, opt := range opts {
 		if err := opt(o); err != nil {

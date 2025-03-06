@@ -4,37 +4,33 @@ import (
 	"context"
 )
 
-// Tee returns a pipeline that applies the given pipeline to the input stream and returns two pipelines that each receive a copy of each item from the input stream.
-func Tee[T, U any](p Pipeline[T, U]) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
-	return func(ctx context.Context, s Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
-		res := TeeN[T, U](p, 2)(ctx, s)
-		return res[0], res[1]
-	}
+// Tee returns two pipelines that each receive a copy of each item from the input stream.
+func Tee[None, T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
+	tees := TeeN(p, 2)
+	return tees[0], tees[1]
 }
 
-// TeeN returns a pipeline that applies the given pipeline to the input stream and returns n pipelines that each receive a copy of each item from the input stream.
-func TeeN[T, U any](p Pipeline[T, U], n int) func(context.Context, Stream[T]) []Pipeline[None, U] {
+// TeeN returns n pipelines that each receive a copy of each item from the input stream.
+func TeeN[None, T any](p Pipeline[None, T], n int) []Pipeline[None, T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}
 
-	return func(ctx context.Context, s Stream[T]) []Pipeline[None, U] {
-		teeS := TeeStream(ctx, p(ctx, s), n)
+	streams := teeStream[T](p(context.Background(), nil), n)
 
-		pipes := make([]Pipeline[None, U], n)
-		for i := 0; i < n; i++ {
-			tee := teeS[i]
-			pipes[i] = func(ctx context.Context, _ Stream[None]) Stream[U] {
-				return tee
-			}
+	pipes := make([]Pipeline[None, T], n)
+	for i := 0; i < n; i++ {
+		tee := streams[i]
+		pipes[i] = func(ctx context.Context, _ Stream[None]) Stream[T] {
+			return tee
 		}
-
-		return pipes
 	}
+
+	return pipes
 }
 
-// TeeStream returns n streams that each receive a copy of each item from the input stream.
-func TeeStream[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
+// teeStream returns n streams that each receive a copy of each item from the input stream.
+func teeStream[T any](in Stream[T], n int) []Stream[T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}
@@ -51,7 +47,7 @@ func TeeStream[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 			}
 		}()
 
-		for item := range OrDone(ctx, in) {
+		for item := range in {
 			for i := 0; i < n; i++ {
 				out[i] <- item
 			}

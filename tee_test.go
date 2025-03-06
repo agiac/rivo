@@ -15,7 +15,7 @@ func ExampleTee() {
 
 	g := rivo.Of("hello", "hello", "hello")
 
-	out1, out2 := rivo.Tee(g)(ctx, nil)
+	out1, out2 := rivo.Tee(g)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -46,150 +46,66 @@ func ExampleTee() {
 }
 
 func TestTee(t *testing.T) {
-	t.Run("tee stream", func(t *testing.T) {
-		ctx := context.Background()
+	ctx := context.Background()
 
-		g := rivo.Of("hello", "hello", "hello")
+	g := rivo.Of("hello", "hello", "hello")
 
-		out1, out2 := rivo.Tee(g)(ctx, nil)
+	out1, out2 := rivo.Tee(g)
 
-		var got1, got2 []rivo.Item[string]
-		wg := sync.WaitGroup{}
-		wg.Add(2)
+	var got1, got2 []rivo.Item[string]
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-		go func() {
-			defer wg.Done()
-			got1 = rivo.Collect(out1(ctx, nil))
-		}()
+	go func() {
+		defer wg.Done()
+		got1 = rivo.Collect(out1(ctx, nil))
+	}()
 
-		go func() {
-			defer wg.Done()
-			got2 = rivo.Collect(out2(ctx, nil))
-		}()
+	go func() {
+		defer wg.Done()
+		got2 = rivo.Collect(out2(ctx, nil))
+	}()
 
-		wg.Wait()
+	wg.Wait()
 
-		want := []rivo.Item[string]{
-			{Val: "hello"},
-			{Val: "hello"},
-			{Val: "hello"},
-		}
+	want := []rivo.Item[string]{
+		{Val: "hello"},
+		{Val: "hello"},
+		{Val: "hello"},
+	}
 
-		assert.Equal(t, want, got1)
-		assert.Equal(t, want, got2)
-	})
-
-	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		in := make(chan rivo.Item[string])
-		go func() {
-			defer close(in)
-			in <- rivo.Item[string]{Val: "hello"}
-			cancel()
-			in <- rivo.Item[string]{Val: "hello"}
-			in <- rivo.Item[string]{Val: "hello"}
-			in <- rivo.Item[string]{Val: "hello"}
-		}()
-
-		g := func(ctx context.Context, s rivo.Stream[string]) rivo.Stream[string] {
-			return in
-		}
-
-		out1, out2 := rivo.Tee(g)(ctx, nil)
-
-		var got1, got2 []rivo.Item[string]
-		wg := sync.WaitGroup{}
-		wg.Add(2)
-
-		go func() {
-			defer wg.Done()
-			got1 = rivo.Collect(out1(ctx, nil))
-		}()
-
-		go func() {
-			defer wg.Done()
-			got2 = rivo.Collect(out2(ctx, nil))
-		}()
-
-		wg.Wait()
-
-		assert.LessOrEqual(t, len(got1), 3)
-		assert.Equal(t, context.Canceled, got1[len(got1)-1].Err)
-		assert.LessOrEqual(t, len(got2), 3)
-		assert.Equal(t, context.Canceled, got2[len(got2)-1].Err)
-	})
+	assert.Equal(t, want, got1)
+	assert.Equal(t, want, got2)
 }
 
 func TestTeeN(t *testing.T) {
-	t.Run("tee stream", func(t *testing.T) {
-		ctx := context.Background()
+	ctx := context.Background()
 
-		g := rivo.Of("hello", "hello", "hello")
+	g := rivo.Of("hello", "hello", "hello")
 
-		const n = 5
+	const n = 5
 
-		out := rivo.TeeN(g, n)(ctx, nil)
+	out := rivo.TeeN(g, n)
 
-		got := make([][]rivo.Item[string], n)
-		wg := sync.WaitGroup{}
-		wg.Add(n)
-		for i := 0; i < n; i++ {
-			go func(i int) {
-				defer wg.Done()
-				got[i] = rivo.Collect(out[i](ctx, nil))
-			}(i)
-		}
+	got := make([][]rivo.Item[string], n)
+	wg := sync.WaitGroup{}
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func(i int) {
+			defer wg.Done()
+			got[i] = rivo.Collect(out[i](ctx, nil))
+		}(i)
+	}
 
-		wg.Wait()
+	wg.Wait()
 
-		want := []rivo.Item[string]{
-			{Val: "hello"},
-			{Val: "hello"},
-			{Val: "hello"},
-		}
+	want := []rivo.Item[string]{
+		{Val: "hello"},
+		{Val: "hello"},
+		{Val: "hello"},
+	}
 
-		for i := 0; i < n; i++ {
-			assert.Equal(t, want, got[i])
-		}
-	})
-
-	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		in := make(chan rivo.Item[string])
-		go func() {
-			defer close(in)
-			in <- rivo.Item[string]{Val: "hello"}
-			cancel()
-			in <- rivo.Item[string]{Val: "hello"}
-			in <- rivo.Item[string]{Val: "hello"}
-			in <- rivo.Item[string]{Val: "hello"}
-		}()
-
-		const n = 5
-
-		out := rivo.TeeN(func(ctx context.Context, s rivo.Stream[string]) rivo.Stream[string] {
-			return in
-		}, n)(ctx, nil)
-
-		got := make([][]rivo.Item[string], n)
-		wg := sync.WaitGroup{}
-		wg.Add(n)
-		for i := 0; i < n; i++ {
-			go func(i int) {
-				defer wg.Done()
-				got[i] = rivo.Collect(out[i](ctx, nil))
-			}(i)
-		}
-
-		wg.Wait()
-
-		for i := 0; i < n; i++ {
-			assert.LessOrEqual(t, len(got[i]), 3)
-			assert.Equal(t, context.Canceled, got[i][len(got[i])-1].Err)
-		}
-	})
+	for i := 0; i < n; i++ {
+		assert.Equal(t, want, got[i])
+	}
 }
