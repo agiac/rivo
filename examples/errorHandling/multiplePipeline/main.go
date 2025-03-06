@@ -19,14 +19,14 @@ func main() {
 	f, _ := os.Create("examples/errorHandling/multiplePipeline/errors.csv")
 	defer f.Close()
 
-	errs, vals := rivo.SegregateErrors(ParseAndDouble())(ctx, nil)
+	vals, errs := rivo.SegregateErrors(ParseAndDouble())(ctx, nil)
 
 	errs1, errs2 := rivo.Tee(errs)(ctx, nil)
 
 	<-rivo.Connect(
+		rivo.Pipe(vals, LogValues()),
 		rivo.Pipe(errs1, SaveErrors(f)),
 		rivo.Pipe(errs2, LogErrors()),
-		rivo.Pipe(vals, LogValues()),
 	)(ctx, nil)
 
 	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):

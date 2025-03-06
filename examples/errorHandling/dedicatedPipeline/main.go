@@ -39,9 +39,9 @@ func main() {
 		fmt.Printf("Value: %d\n", i.Val)
 	})
 
-	errs, vals := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))(ctx, nil)
+	vals, errs := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))(ctx, nil)
 
-	<-rivo.Connect(rivo.Pipe(errs, handleErrors), rivo.Pipe(vals, handleValues))(ctx, nil)
+	<-rivo.Connect(rivo.Pipe(vals, handleValues), rivo.Pipe(errs, handleErrors))(ctx, nil)
 
 	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):
 	// Value: 2
