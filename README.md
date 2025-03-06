@@ -116,6 +116,8 @@ func main() {
 - `FromFunc`: returns a pipeline which returns a stream that will emit the values returned by the provided function;
 - `FromSeq` and `FromSeq2`: returns a pipeline which returns a stream that will emit the values from the provided iterator;
 - `Tee` and `TeeN`: return n pipelines that each receive a copy of each item from the input stream;
+- `Segregate`:  returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate;
+- `SegregateErrors`: returns two pipelines, where the first pipeline emits items without errors, and the second pipeline emits items with errors;
 
 ### Sinks
 - `Do`: returns a pipeline which performs a side effect for each item in the input stream;
@@ -127,7 +129,6 @@ func main() {
 - `Flatten`: returns a pipeline which flattens the input stream of slices; 
 - `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
 - `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
-- `Segregate`: returns a function that returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
 
 Besides these, the directories of the library contain more specialized pipelines factories.
 

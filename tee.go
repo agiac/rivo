@@ -5,13 +5,13 @@ import (
 )
 
 // Tee returns two pipelines that each receive a copy of each item from the input stream.
-func Tee[None, T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
+func Tee[T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
 	tees := TeeN(p, 2)
 	return tees[0], tees[1]
 }
 
 // TeeN returns n pipelines that each receive a copy of each item from the input stream.
-func TeeN[None, T any](p Pipeline[None, T], n int) []Pipeline[None, T] {
+func TeeN[T any](p Pipeline[None, T], n int) []Pipeline[None, T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}

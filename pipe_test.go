@@ -39,7 +39,6 @@ func ExamplePipe() {
 }
 
 func TestPipe(t *testing.T) {
-
 	t.Run("pipe all values", func(t *testing.T) {
 		ctx := context.Background()
 
@@ -72,6 +71,11 @@ func TestPipe(t *testing.T) {
 			if i.Val == 2 {
 				cancel()
 			}
+
+			if i.Err != nil {
+				return 0, i.Err
+			}
+
 			return i.Val + 1, nil
 		})
 
@@ -79,7 +83,8 @@ func TestPipe(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 4)
+		assert.LessOrEqual(t, len(got), 5)
+		assert.Equal(t, ctx.Err(), got[len(got)-1].Err)
 	})
 }
 

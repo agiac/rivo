@@ -19,7 +19,7 @@ func main() {
 	f, _ := os.Create("examples/errorHandling/multiplePipeline/errors.csv")
 	defer f.Close()
 
-	vals, errs := rivo.SegregateErrors(ParseAndDouble())(ctx, nil)
+	vals, errs := rivo.SegregateErrors(ParseAndDouble())
 
 	errs1, errs2 := rivo.Tee(errs)
 

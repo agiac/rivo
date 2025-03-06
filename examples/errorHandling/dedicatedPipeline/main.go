@@ -39,7 +39,7 @@ func main() {
 		fmt.Printf("Value: %d\n", i.Val)
 	})
 
-	vals, errs := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))(ctx, nil)
+	vals, errs := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))
 
 	<-rivo.Connect(rivo.Pipe(vals, handleValues), rivo.Pipe(errs, handleErrors))(ctx, nil)
 

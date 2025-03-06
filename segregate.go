@@ -2,48 +2,38 @@ package rivo
 
 import "context"
 
-// Segregate returns a function that returns two pipeline, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
-func Segregate[T, U any](p Pipeline[T, U], predicate func(ctx context.Context, item Item[U]) bool) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
-	return func(ctx context.Context, in Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
-		out1 := make(chan Item[U])
-		out2 := make(chan Item[U])
+// Segregate returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
+func Segregate[T any](p Pipeline[None, T], predicate func(item Item[T]) bool) (Pipeline[None, T], Pipeline[None, T]) {
+	out1 := make(chan Item[T])
+	out2 := make(chan Item[T])
 
-		p1 := func(ctx context.Context, _ Stream[None]) Stream[U] {
-			return out1
-		}
-
-		p2 := func(ctx context.Context, _ Stream[None]) Stream[U] {
-			return out2
-		}
-
-		go func() {
-			defer close(out1)
-			defer close(out2)
-
-			for item := range p(ctx, in) {
-				if predicate(ctx, item) {
-					select {
-					case out1 <- item:
-					case <-ctx.Done():
-						return
-					}
-				} else {
-					select {
-					case out2 <- item:
-					case <-ctx.Done():
-						return
-					}
-				}
-			}
-		}()
-
-		return p1, p2
+	p1 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return out1
 	}
+
+	p2 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return out2
+	}
+
+	go func() {
+		defer close(out1)
+		defer close(out2)
+
+		for item := range p(context.Background(), nil) {
+			if predicate(item) {
+				out1 <- item
+			} else {
+				out2 <- item
+			}
+		}
+	}()
+
+	return p1, p2
 }
 
-// SegregateErrors returns a function that returns two pipeline, where the first pipeline emits items without errors, and the second pipeline emits items with errors.
-func SegregateErrors[T, U any](p Pipeline[T, U]) func(context.Context, Stream[T]) (Pipeline[None, U], Pipeline[None, U]) {
-	return Segregate(p, func(ctx context.Context, item Item[U]) bool {
+// SegregateErrors returns two pipelines, where the first pipeline emits items without errors, and the second pipeline emits items with errors.
+func SegregateErrors[T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
+	return Segregate[T](p, func(item Item[T]) bool {
 		return item.Err == nil
 	})
 }
