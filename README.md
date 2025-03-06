@@ -147,6 +147,13 @@ Besides these, the directories of the library contain more specialized pipelines
 - `FromReader`: returns a pipeline which reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a pipeline which writes the input stream to the provided `csv.Writer`;
 
+### Package `rivo/aws/dynamodb`
+
+- `Scan`
+- `ScanItems`
+- `BatchWrite`
+- `BatchPutItems`
+
 ## Error handling
 
 As mentioned, each values contains a value and an optional error. You can handle error either individually inside pipelines' callbacks like `Map` or `Do` or
