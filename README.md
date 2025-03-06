@@ -98,7 +98,7 @@ func main() {
 
 	// By passing a context and an input channel to our pipeline, we can get the output stream.
 	// Since our first pipeline `in` is a generator and does not depend on an input stream, we can pass a nil channel.
-	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
+	// Also, since log is a sink, we only have to read once from the output channel to know that the pipeline has finished.
 	<-p(ctx, nil)
 
 	// Expected output:
@@ -146,33 +146,6 @@ Besides these, the directories of the library contain more specialized pipelines
 - `FromReader`: returns a pipeline which reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a pipeline which writes the input stream to the provided `csv.Writer`;
 
-### Package `rivio/errors`
-
-- `WithErrorHandler`: returns a pipeline that connects the input pipeline to an error handling pipeline.
-
-## Optional parameters
-
-Many pipeline factories accepts a common set of optional parameters. These can be provided via functional options.
-
-```go
-  double := rivo.Map(
-	  func(ctx context.Context, i rivo.Item[int]) (int, error) { return i.Val * 2, nil  },
-	  // `Pass additional options to the pipeline
-	  rivo.WithBufferSize(1), 
-	  rivo.WithPoolSize(runtime.NumCPU()), 
-	  )
-```
-
-The currently available options are:
-
-- `WithPoolSize(int)`: sets the number of goroutines that will be used to process items. Default is 1.
-- `WithBufferSize(int)`: sets the buffer size of the output channel. Default is 0;
-- `WithStopOnError(bool)`: if true, the pipeline will stop processing items when an error is encountered. Default is false.
-- `WithOnBeforeClosed(func(context.Context) error)`: a function that will be called before the output channel is closed.
-
-
-
-
 ## Error handling
 
 As mentioned, each values contains a value and an optional error. You can handle error either individually inside pipelines' callbacks like `Map` or `Do` or
@@ -191,11 +164,8 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 ## Roadmap
 
 - [ ] Review docs, in particular where "pipeline" is used instead of "generator", "sink" or "transformer"
-- [ ] Remove current dedicated folders for special pipelines and move them to the main package
-- [ ] Consider dedicated options for each pipeline instead of a common set of options
 - [ ] Add more pipelines, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [ ] Tap 
-  - [ ] Better error handling
   - [ ] Time-based
   - [ ] SQL
   - [ ] AWS
@@ -203,7 +173,6 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 - [ ] Add more utilities
   - [ ] Merge
 - [ ] Add more examples
-- [ ] Error handling section in the README
 
 ## License
 
