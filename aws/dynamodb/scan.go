@@ -42,6 +42,7 @@ func ScanPoolSize(poolSize int) ScanOption {
 	}
 }
 
+// Scan returns a pipeline which scans the provided DynamoDB table and emits the scan output responses;
 func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, *dynamodb.ScanOutput] {
 	o, err := applyScanOptions(newDefaultScanOptions(), opt)
 	if err != nil {
@@ -100,6 +101,7 @@ func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption)
 	}
 }
 
+// ScanItems returns a pipeline which scans the provided DynamoDB table and emits the items from the scan output responses.
 func ScanItems(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, map[string]types.AttributeValue] {
 	tableScan := Scan(client, input, opt...)
 

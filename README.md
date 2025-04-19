@@ -123,6 +123,7 @@ func main() {
 
 ### Sinks
 - `Do`: returns a pipeline which performs a side effect for each item in the input stream;
+- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
 
 ### Transformers
 - `Filter`: returns a pipeline which filters the input stream using the given function;
@@ -130,7 +131,6 @@ func main() {
 - `Batch`: returns a pipeline which groups the input stream into batches of the provided size;
 - `Flatten`: returns a pipeline which flattens the input stream of slices; 
 - `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return a pipeline which composes the provided pipelines together;
-- `Connect`: returns a sync which applies the given syncs to the input stream concurrently;
 
 Besides these, the directories of the library contain more specialized pipelines factories.
 
@@ -151,10 +151,10 @@ Besides these, the directories of the library contain more specialized pipelines
 
 ### Package `rivo/aws/dynamodb`
 
-- `Scan`
-- `ScanItems`
-- `BatchWrite`
-- `BatchPutItems`
+- `Scan`: returns a pipeline which scans the provided DynamoDB table and emits the scan output responses;
+- `ScanItems`: returns a pipeline which scans the provided DynamoDB table and emits the items from the scan output responses;
+- `BatchWrite`: returns a pipeline which writes the input stream to the provided DynamoDB table using the BatchWriteItem API.
+- `BatchPutItems`: returns a pipeline which writes the input stream to the provided DynamoDB table using the BatchWriteItem API, but only for PutItem operations;
 
 ## Error handling
 

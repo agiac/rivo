@@ -41,7 +41,10 @@ func main() {
 
 	vals, errs := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))
 
-	<-rivo.Connect(rivo.Pipe(vals, handleValues), rivo.Pipe(errs, handleErrors))(ctx, nil)
+	<-rivo.Connect(
+		rivo.Pipe(vals, handleValues),
+		rivo.Pipe(errs, handleErrors),
+	)(ctx, nil)
 
 	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):
 	// Value: 2

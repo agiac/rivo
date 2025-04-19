@@ -39,8 +39,6 @@ func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
 				return false
 			}
 
-			// TODO: don't send error on context cancel
-
 			sendError := func(err error) (exit bool) {
 				select {
 				case out <- Item[[]T]{Err: err}:

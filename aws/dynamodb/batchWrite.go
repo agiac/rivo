@@ -55,6 +55,7 @@ func BatchWriteChanSize(chanSize int) BatchWriteOption {
 	}
 }
 
+// BatchWrite returns a pipeline which writes the input stream to the provided DynamoDB using the BatchWriteItem API.
 func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeline[*awsdynamodb.BatchWriteItemInput, *awsdynamodb.BatchWriteItemOutput] {
 	o, err := applyBatchWriteOptions(newDefaultBatchWriteOptions(), opt)
 	if err != nil {
@@ -112,6 +113,7 @@ func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeli
 	}
 }
 
+// BatchPutItems returns a pipeline which writes the input stream to the provided DynamoDB using the BatchWriteItem API, but only for PutItem operations;
 func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWriteOption) rivo.Pipeline[types.PutRequest, *awsdynamodb.BatchWriteItemOutput] {
 	batchedItems := rivo.Batch[types.PutRequest](25)
 
