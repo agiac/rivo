@@ -14,13 +14,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local:latest
-        ports:
-          - 8000:8000
-        options:
-          --entrypoint /home/dynamodblocal/DynamoDBLocal.jar -sharedDb -inMemory -delayTransientStatuses
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,9 +22,4 @@ jobs:
         with:
           go-version: '1.24'
       - name: Run tests
-        env:
-          INTEGRATION_TESTS: true
-          AWS_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
         run: go test -v -race ./...
