@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/agiac/rivo"
+	rivo "github.com/agiac/rivo/core"
 )
 
 // This example demonstrates a basic usage of pipelines and the Pipe function.
@@ -17,23 +17,13 @@ func main() {
 	in := rivo.Of(1, 2, 3, 4, 5)
 
 	// `Filter` returns a pipeline that filters the input stream using the given function.
-	onlyEven := rivo.Filter(func(ctx context.Context, i rivo.Item[int]) (bool, error) {
-		// Always check for errors
-		if i.Err != nil {
-			return true, i.Err // Propagate the error
-		}
-
-		return i.Val%2 == 0, nil
+	onlyEven := rivo.Filter(func(ctx context.Context, n int) bool {
+		return n%2 == 0
 	})
 
 	// `Do` returns a pipeline that applies the given function to each item in the input stream, without emitting any values.
-	log := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
-		if i.Err != nil {
-			fmt.Printf("ERROR: %v\n", i.Err)
-			return
-		}
-
-		fmt.Println(i.Val)
+	log := rivo.Do(func(ctx context.Context, n int) {
+		fmt.Println(n)
 	})
 
 	// `Pipe` composes pipelines together, returning a new pipeline

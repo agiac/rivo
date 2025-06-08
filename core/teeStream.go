@@ -2,8 +2,14 @@ package core
 
 import "context"
 
-// TeeStream returns n streams that each receive a copy of each item from the input stream.
-func TeeStream[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
+// TeeStream returns 2 streams that each receive a copy of each item from the input stream.
+func TeeStream[T any](ctx context.Context, in Stream[T]) (Stream[T], Stream[T]) {
+	ss := TeeStreamN(ctx, in, 2)
+	return ss[0], ss[1]
+}
+
+// TeeStreamN returns n streams that each receive a copy of each item from the input stream.
+func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}

@@ -12,7 +12,7 @@ func Connect[T any](pp ...Sync[T]) Sync[T] {
 		go func() {
 			defer close(out)
 
-			inS := TeeStream(ctx, in, len(pp))
+			inS := TeeStreamN(ctx, in, len(pp))
 
 			wg := sync.WaitGroup{}
 			wg.Add(len(pp))

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/agiac/rivo"
+	rivo "github.com/agiac/rivo/core"
 )
 
 // This example demonstrates the recommended approach to handle errors, in a separate dedicate pipeline.
@@ -15,36 +15,43 @@ func main() {
 
 	g := rivo.Of("1", "2", "3_", "4", "5", "6**", "?", "8", "9", "10")
 
-	toInt := rivo.Map(func(ctx context.Context, i rivo.Item[string]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err // Pass errors along
+	toInt := rivo.Map(func(ctx context.Context, s string) rivo.Item[int] {
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			return rivo.Item[int]{Err: err} // Return an item with the error
 		}
 
-		return strconv.Atoi(i.Val)
+		return rivo.Item[int]{Val: n} // Return an item with the value
 	})
 
-	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) (int, error) {
+	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) rivo.Item[int] {
 		if i.Err != nil {
-			return 0, i.Err // Pass errors along
+			return i // If there's an error, return it as is
 		}
 
-		return i.Val * 2, nil
+		return rivo.Item[int]{Val: i.Val * 2} // Otherwise, double the value
 	})
+
+	basePipeline := rivo.Pipe3(g, toInt, double)
 
 	handleErrors := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		if i.Err == nil {
+			return // Skip items that do not have an error
+		}
 		fmt.Printf("Error: %v\n", i.Err)
 	})
 
 	handleValues := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
+		if i.Err != nil {
+			return // Skip items that have an error
+		}
 		fmt.Printf("Value: %d\n", i.Val)
 	})
 
-	vals, errs := rivo.SegregateErrors(rivo.Pipe3(g, toInt, double))
-
 	<-rivo.Connect(
-		rivo.Pipe(vals, handleValues),
-		rivo.Pipe(errs, handleErrors),
-	)(ctx, nil)
+		handleValues,
+		handleErrors,
+	)(ctx, basePipeline(ctx, nil))
 
 	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):
 	// Value: 2

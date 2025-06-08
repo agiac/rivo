@@ -20,3 +20,11 @@ type Generator[T any] = Pipeline[None, T]
 
 // Sync is a pipeline that processes items of type T and does not emit any items.
 type Sync[T any] = Pipeline[T, None]
+
+// Item represents a single item in a data stream. It contains a value of type T and an optional error.
+type Item[T any] struct {
+	// Val is the value of the item when there is no error.
+	Val T
+	// Err is the optional error of the item.
+	Err error
+}
