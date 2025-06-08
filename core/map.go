@@ -3,43 +3,25 @@ package core
 import (
 	"context"
 	"fmt"
-	"sync"
 )
 
 // Map returns a pipeline that applies a function to each item from the input stream.
 func Map[T, U any](f func(context.Context, T) U, opt ...MapOption) Pipeline[T, U] {
 	o := mustMapOptions(opt)
 
-	return func(ctx context.Context, stream Stream[T]) Stream[U] {
-		out := make(chan U, o.bufferSize)
+	return ForEachOutput[T, U](
+		func(ctx context.Context, val T, out chan<- U) {
+			v := f(ctx, val)
 
-		wg := sync.WaitGroup{}
-		wg.Add(o.poolSize)
-
-		go func() {
-			defer close(out)
-
-			for range o.poolSize {
-				go func() {
-					defer wg.Done()
-
-					for item := range OrDone(ctx, stream) {
-						v := f(ctx, item)
-
-						select {
-						case <-ctx.Done():
-							return
-						case out <- v:
-						}
-					}
-				}()
+			select {
+			case <-ctx.Done():
+				return
+			case out <- v:
 			}
-
-			wg.Wait()
-		}()
-
-		return out
-	}
+		},
+		ForEachOutputPoolSize(o.poolSize),
+		ForEachOutputBufferSize(o.bufferSize),
+	)
 }
 
 type mapOptions struct {

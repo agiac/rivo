@@ -14,11 +14,8 @@ import (
 // since the output stream will be closed when the input stream is closed or the context is done.
 // ForEachOutput panics if invalid options are provided.
 func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), opt ...ForEachOutputOption) Pipeline[T, U] {
-	o, err := applyForEachOutputOptions(opt)
-	if err != nil {
-		panic(fmt.Sprintf("invalid ForEachOutputOption: %v", err))
-	}
-
+	o := mustForEachOutputOptions(opt)
+	
 	return func(ctx context.Context, in Stream[T]) Stream[U] {
 		out := make(chan U, o.bufferSize)
 
