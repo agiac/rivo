@@ -1,7 +1,9 @@
 // Package rivo is a library for stream processing.
 package rivo
 
-import "context"
+import (
+	"github.com/agiac/rivo/core"
+)
 
 // None is a type that represents no value.
 // It is typically used as the input type of generator pipeline that does not
@@ -17,9 +19,15 @@ type Item[T any] struct {
 }
 
 // Stream represents a data stream of items. It is a read only channel of Item[T].
-type Stream[T any] <-chan Item[T]
-
-type ErrorStream = Stream[struct{}]
+type Stream[T any] = core.Stream[Item[T]]
 
 // Pipeline is a function that takes a context and a stream and returns a stream of the same type or a different type.
-type Pipeline[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
+type Pipeline[T, U any] = core.Pipeline[Item[T], Item[U]]
+
+// Generator is a pipeline that generates items of type T without any input.
+type Generator[T any] = core.Generator[Item[T]]
+
+// Sync is a pipeline that processes items of type T and does not emit any items.
+type Sync[T any] = core.Sync[Item[T]]
+
+type ErrorStream = Stream[struct{}]

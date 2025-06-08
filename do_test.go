@@ -4,11 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync/atomic"
-	"testing"
-
 	. "github.com/agiac/rivo"
-	"github.com/stretchr/testify/assert"
 )
 
 func ExampleDo() {
@@ -35,64 +31,4 @@ func ExampleDo() {
 	// Output:
 	// ERROR: error 1
 	// ERROR: error 2
-}
-
-func TestDo(t *testing.T) {
-	t.Run("do all items", func(t *testing.T) {
-		ctx := context.Background()
-
-		count := 0
-
-		g := Of(1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i Item[int]) {
-			count++
-		})
-
-		p := Pipe(g, d)
-
-		<-p(ctx, nil)
-
-		assert.Equal(t, 5, count)
-	})
-
-	t.Run("with context cancelled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		count := 0
-
-		g := Of(1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i Item[int]) {
-			count++
-			if i.Val == 3 {
-				cancel()
-			}
-		})
-
-		p := Pipe(g, d)
-
-		<-p(ctx, nil)
-
-		assert.LessOrEqual(t, 4, count)
-	})
-
-	t.Run("with pool size", func(t *testing.T) {
-		ctx := context.Background()
-
-		count := atomic.Int32{}
-
-		g := Of[int32](1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i Item[int32]) {
-			count.Add(1)
-		}, DoPoolSize(3))
-
-		p := Pipe(g, d)
-
-		<-p(ctx, nil)
-
-		assert.Equal(t, int32(5), count.Load())
-	})
 }

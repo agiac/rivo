@@ -3,6 +3,7 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"github.com/agiac/rivo/core"
 	"testing"
 	"time"
 
@@ -17,7 +18,7 @@ func ExampleBatch() {
 
 	b := Batch[int](2)
 
-	p := Pipe(in, b)
+	p := core.Pipe(in, b)
 
 	for item := range p(ctx, nil) {
 		fmt.Printf("%v\n", item.Val)
@@ -37,7 +38,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](2)
 
-		got := Collect(Pipe(in, b)(ctx, nil))
+		got := core.Collect(core.Pipe(in, b)(ctx, nil))
 
 		want := []Item[[]int]{
 			{Val: []int{1, 2}},
@@ -64,7 +65,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](10, BatchMaxWait(100*time.Millisecond))
 
-		got := Collect(b(ctx, in))
+		got := core.Collect(b(ctx, in))
 
 		want := []Item[[]int]{
 			{Val: []int{1}},
@@ -89,7 +90,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](2)
 
-		got := Collect(b(ctx, in))
+		got := core.Collect(b(ctx, in))
 
 		want := []Item[[]int]{
 			{Err: fmt.Errorf("error")},
@@ -101,26 +102,14 @@ func TestBatch(t *testing.T) {
 
 	t.Run("context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		cancel()
 
-		in := make(chan Item[int])
-
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-			cancel()
-			in <- Item[int]{Val: 3}
-			in <- Item[int]{Val: 4}
-			in <- Item[int]{Val: 5}
-		}()
-
+		g := Of(1, 2, 3, 4, 5)
 		b := Batch[int](2)
 
-		got := Collect(b(ctx, in))
+		got := core.Collect(core.Pipe(g, b)(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 3)
-		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
+		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
 
 	t.Run("with buffer size", func(t *testing.T) {
@@ -130,9 +119,9 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](2, BatchBufferSize(3))
 
-		out := Pipe(in, b)(ctx, nil)
+		out := core.Pipe(in, b)(ctx, nil)
 
-		got := Collect(out)
+		got := core.Collect(out)
 
 		want := []Item[[]int]{
 			{Val: []int{1, 2}},

@@ -66,22 +66,11 @@ func TestCollectWithContext(t *testing.T) {
 
 	t.Run("collect till context is cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
 
-		in := make(chan Item[int], 5)
+		g := Of(1, 2, 3, 4, 5)
+		got := CollectWithContext(ctx, g(ctx, nil))
 
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-			cancel()
-			in <- Item[int]{Val: 3}
-			in <- Item[int]{Val: 4}
-			in <- Item[int]{Val: 5}
-		}()
-
-		got := CollectWithContext(ctx, in)
-
-		assert.LessOrEqual(t, len(got), 4)
-		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
+		assert.Lessf(t, len(got), 5, "expected less than 5 items due to context cancellation")
 	})
 }

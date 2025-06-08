@@ -1,10 +1,13 @@
 package rivo
 
-import "context"
+import (
+	"context"
+	"github.com/agiac/rivo/core"
+)
 
 // Of returns a generator Pipeline that emits the given items. The input stream is ignored.
-func Of[T any](items ...T) Pipeline[None, T] {
-	return func(ctx context.Context, _ Stream[None]) Stream[T] {
+func Of[T any](items ...T) Generator[T] {
+	return func(ctx context.Context, stream core.Stream[core.None]) core.Stream[Item[T]] {
 		out := make(chan Item[T])
 
 		go func() {
@@ -13,7 +16,6 @@ func Of[T any](items ...T) Pipeline[None, T] {
 			for _, item := range items {
 				select {
 				case <-ctx.Done():
-					out <- Item[T]{Err: ctx.Err()}
 					return
 				case out <- Item[T]{Val: item}:
 				}

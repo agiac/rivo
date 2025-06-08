@@ -3,6 +3,7 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"github.com/agiac/rivo/core"
 	"testing"
 
 	. "github.com/agiac/rivo"
@@ -23,7 +24,7 @@ func ExampleMap() {
 		return i.Val * 2, nil
 	})
 
-	p := Pipe(in, double)
+	p := core.Pipe(in, double)
 
 	s := p(ctx, nil)
 
@@ -51,7 +52,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := core.Collect(core.Pipe(g, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -78,7 +79,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := core.Collect(core.Pipe(g, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},
@@ -103,26 +104,14 @@ func TestMap(t *testing.T) {
 		}
 
 		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
+		cancel()
 
-		in := make(chan Item[int])
-
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-			cancel()
-			in <- Item[int]{Val: 3}
-			in <- Item[int]{Val: 4}
-			in <- Item[int]{Val: 5}
-		}()
-
+		g := Of(1, 2, 3, 4, 6)
 		m := Map(mapFn)
 
-		got := Collect(m(ctx, in))
+		got := core.Collect(core.Pipe(g, m)(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 4)
-		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
+		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
 
 	t.Run("with buffer size", func(t *testing.T) {
@@ -141,11 +130,11 @@ func TestMap(t *testing.T) {
 			in <- Item[int]{Val: 3}
 		}()
 
-		m := Map(mapFn, MapBufferSize(3))
+		m := Map(mapFn, core.MapBufferSize(3))
 
 		out := m(ctx, in)
 
-		got := Collect(out)
+		got := core.Collect(out)
 
 		want := []Item[int]{
 			{Val: 2},
@@ -166,9 +155,9 @@ func TestMap(t *testing.T) {
 
 		in := Of(1, 2, 3, 4, 5)
 
-		m := Map(mapFn, MapPoolSize(3))
+		m := Map(mapFn, core.MapPoolSize(3))
 
-		got := Collect(Pipe(in, m)(ctx, nil))
+		got := core.Collect(core.Pipe(in, m)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 2},

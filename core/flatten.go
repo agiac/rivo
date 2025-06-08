@@ -1,4 +1,4 @@
-package rivo
+package core
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 // Flatten returns a Pipeline that flattens a Stream of slices into a Stream of individual items.
 func Flatten[T any]() Pipeline[[]T, T] {
 	return func(ctx context.Context, in Stream[[]T]) Stream[T] {
-		out := make(chan Item[T])
+		out := make(chan T)
 
 		go func() {
 			defer close(out)
@@ -21,20 +21,11 @@ func Flatten[T any]() Pipeline[[]T, T] {
 						return
 					}
 
-					if item.Err != nil {
+					for _, val := range item {
 						select {
 						case <-ctx.Done():
 							return
-						case out <- Item[T]{Err: item.Err}:
-							continue
-						}
-					}
-
-					for _, val := range item.Val {
-						select {
-						case <-ctx.Done():
-							return
-						case out <- Item[T]{Val: val}:
+						case out <- val:
 						}
 					}
 				}

@@ -1,4 +1,4 @@
-package rivo_test
+package core_test
 
 //
 //import (

@@ -3,6 +3,7 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	"github.com/agiac/rivo/core"
 	"testing"
 
 	. "github.com/agiac/rivo"
@@ -16,7 +17,7 @@ func ExampleFlatten() {
 
 	f := Flatten[int]()
 
-	p := Pipe(in, f)
+	p := core.Pipe(in, f)
 
 	for item := range p(ctx, nil) {
 		fmt.Printf("%v\n", item.Val)
@@ -38,7 +39,7 @@ func TestFlatten(t *testing.T) {
 
 		f := Flatten[int]()
 
-		got := Collect(Pipe(in, f)(ctx, nil))
+		got := core.Collect(core.Pipe(in, f)(ctx, nil))
 
 		want := []Item[int]{
 			{Val: 1},
@@ -65,7 +66,7 @@ func TestFlatten(t *testing.T) {
 
 		f := Flatten[int]()
 
-		got := Collect(f(ctx, in))
+		got := core.Collect(f(ctx, in))
 
 		want := []Item[int]{
 			{Val: 1},
@@ -80,23 +81,13 @@ func TestFlatten(t *testing.T) {
 
 	t.Run("context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		cancel()
 
-		in := make(chan Item[[]int])
-
-		go func() {
-			defer close(in)
-			in <- Item[[]int]{Val: []int{1, 2}}
-			cancel()
-			in <- Item[[]int]{Val: []int{3, 4}}
-			in <- Item[[]int]{Val: []int{5, 6}}
-		}()
-
+		g := Of([]int{1, 2}, []int{3, 4}, []int{5})
 		f := Flatten[int]()
 
-		got := Collect(f(ctx, in))
+		got := core.Collect(core.Pipe(g, f)(ctx, nil))
 
-		assert.LessOrEqual(t, len(got), 4)
-		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
+		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
 }

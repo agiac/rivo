@@ -19,6 +19,7 @@ func Segregate[T any](p Pipeline[None, T], predicate func(item Item[T]) bool) (P
 		defer close(out1)
 		defer close(out2)
 
+		// TODO: Handle context cancellation
 		for item := range p(context.Background(), nil) {
 			if predicate(item) {
 				out1 <- item
