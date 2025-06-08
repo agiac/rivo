@@ -3,43 +3,25 @@ package core
 import (
 	"context"
 	"fmt"
-	"sync"
 )
 
 // Filter returns a pipeline that filters the input stream using the given function.
 func Filter[T any](f func(context.Context, T) bool, opt ...FilterOption) Pipeline[T, T] {
 	o := assertFilterOptions(opt)
 
-	return func(ctx context.Context, stream Stream[T]) Stream[T] {
-		out := make(chan T, o.bufferSize)
-
-		wg := sync.WaitGroup{}
-		wg.Add(o.poolSize)
-
-		go func() {
-			defer close(out)
-
-			for range o.poolSize {
-				go func() {
-					defer wg.Done()
-
-					for item := range OrDone(ctx, stream) {
-						if f(ctx, item) {
-							select {
-							case out <- item:
-							case <-ctx.Done():
-								return
-							}
-						}
-					}
-				}()
+	return ForEachOutput[T, T](
+		func(ctx context.Context, val T, out chan<- T) {
+			if f(ctx, val) {
+				select {
+				case <-ctx.Done():
+					return
+				case out <- val:
+				}
 			}
-
-			wg.Wait()
-		}()
-
-		return out
-	}
+		},
+		ForEachOutputPoolSize(o.poolSize),
+		ForEachOutputBufferSize(o.bufferSize),
+	)
 }
 
 type filterOptions struct {

@@ -15,7 +15,7 @@ import (
 // ForEachOutput panics if invalid options are provided.
 func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), opt ...ForEachOutputOption) Pipeline[T, U] {
 	o := mustForEachOutputOptions(opt)
-	
+
 	return func(ctx context.Context, in Stream[T]) Stream[U] {
 		out := make(chan U, o.bufferSize)
 
@@ -41,6 +41,7 @@ func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), o
 
 							f(ctx, v, out)
 						}
+						// TODO: consider adding an optional <-time.After(o.maxWait) to allow for periodic flushing
 					}
 				}()
 			}

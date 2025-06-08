@@ -24,6 +24,9 @@ func ExampleDo() {
 	// Output:
 	// 1
 	// 2
+	// 3
+	// 4
+	// 5
 }
 
 func TestDo(t *testing.T) {
@@ -80,5 +83,28 @@ func TestDo(t *testing.T) {
 		<-p(ctx, nil)
 
 		assert.Equal(t, int32(5), count.Load())
+	})
+
+	t.Run("with onBeforeClose", func(t *testing.T) {
+		ctx := context.Background()
+
+		count := atomic.Int32{}
+
+		g := Of[int32](1, 2, 3, 4, 5)
+
+		onBeforeCloseCalled := false
+
+		d := Do(func(ctx context.Context, i int32) {
+			count.Add(1)
+		}, DoOnBeforeClose(func(ctx context.Context) {
+			onBeforeCloseCalled = true
+		}))
+
+		p := Pipe(g, d)
+
+		<-p(ctx, nil)
+
+		assert.Equal(t, int32(5), count.Load())
+		assert.True(t, onBeforeCloseCalled)
 	})
 }
