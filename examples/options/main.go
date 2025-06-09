@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/agiac/rivo"
+	rivo "github.com/agiac/rivo/core"
 )
 
 // This example demonstrates how to pass additional options to a pipeline.
@@ -15,38 +14,25 @@ func main() {
 
 	in := rivo.Of(1, 2, 3, 4, 5)
 
-	doubleFn := func(ctx context.Context, i rivo.Item[int]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err
-		}
-
-		// Simulate an error
-		if i.Val == 3 {
-			return 0, errors.New("some error")
-		}
-
-		return i.Val * 2, nil
+	doubleFn := func(ctx context.Context, n int) int {
+		return n * 2
 	}
 
 	// `Pass additional options to the pipeline
 	double := rivo.Map(doubleFn, rivo.MapBufferSize(1))
 
-	p := rivo.Pipe(in, double)
+	p := rivo.Pipe(rivo.Pipeline[rivo.None, int](in), double)
 
 	s := p(ctx, nil)
 
-	for item := range s {
-		if item.Err != nil {
-			fmt.Printf("ERROR: %v\n", item.Err)
-			continue
-		}
-		fmt.Println(item.Val)
+	for n := range s {
+		fmt.Println(n)
 	}
 
 	// Output:
 	// 2
 	// 4
-	// ERROR: some error
+	// 6
 	// 8
 	// 10
 }

@@ -41,7 +41,6 @@ func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), o
 
 							f(ctx, v, out)
 						}
-						// TODO: consider adding an optional <-time.After(o.maxWait) to allow for periodic flushing
 					}
 				}()
 			}

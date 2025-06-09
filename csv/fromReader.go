@@ -9,6 +9,8 @@ import (
 	rivo "github.com/agiac/rivo/core"
 )
 
+// TODO: Add support to discard the header line.
+
 // FromReader returns a generator pipeline that reads from a csv.Reader.
 // It's not thread-safe to use a pool size greater than 1.
 func FromReader(r *csv.Reader) rivo.Pipeline[rivo.None, rivo.Item[[]string]] {

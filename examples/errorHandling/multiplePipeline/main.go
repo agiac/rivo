@@ -38,7 +38,7 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		<-rivo.Connect(
+		<-rivo.Connect[rivo.Item[int]](
 			SaveErrors(f),
 			LogErrors(),
 		)(ctx, errS)
@@ -75,7 +75,7 @@ func ParseAndDouble() rivo.Pipeline[rivo.None, rivo.Item[int]] {
 		return rivo.Item[int]{Val: i.Val * 2}
 	})
 
-	return rivo.Pipe3(g, toInt, double)
+	return rivo.Pipe3(rivo.Pipeline[rivo.None, string](g), toInt, double)
 }
 
 func SaveErrors(f *os.File) rivo.Sync[rivo.Item[int]] {
@@ -89,7 +89,7 @@ func SaveErrors(f *os.File) rivo.Sync[rivo.Item[int]] {
 		fmt.Printf("Error saving to CSV: %v\n", err)
 	})
 
-	return rivo.Pipe3(toCSVError, save, logErrors)
+	return rivo.Sync[rivo.Item[int]](rivo.Pipe3(toCSVError, save, rivo.Pipeline[error, rivo.None](logErrors)))
 }
 
 func LogErrors() rivo.Sync[rivo.Item[int]] {

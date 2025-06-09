@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agiac/rivo"
+	rivo "github.com/agiac/rivo/core"
 	rivocsv "github.com/agiac/rivo/csv"
 )
 
@@ -24,15 +24,16 @@ func main() {
 
 	readCSV := rivocsv.FromReader(r)
 
-	filterDates := rivo.Filter[[]string](func(ctx context.Context, i rivo.Item[[]string]) (bool, error) {
+	filterDates := rivo.Filter[rivo.Item[[]string]](func(ctx context.Context, i rivo.Item[[]string]) bool {
 		date, err := time.Parse("2006-01-02", i.Val[5])
 		if err != nil {
-			return false, nil
+			return false
 		}
-		return date.After(time.Date(2023, 1, 20, 0, 0, 0, 0, time.UTC)), nil
+
+		return date.After(time.Date(2023, 1, 20, 0, 0, 0, 0, time.UTC))
 	})
 
-	logValues := rivo.Do[[]string](func(ctx context.Context, i rivo.Item[[]string]) {
+	logValues := rivo.Do[rivo.Item[[]string]](func(ctx context.Context, i rivo.Item[[]string]) {
 		log.Println(i.Val)
 	})
 
