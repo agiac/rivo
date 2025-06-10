@@ -2,10 +2,10 @@ package rivo
 
 import "context"
 
-// Of returns a generator Pipeline that emits the given items. The input stream is ignored.
-func Of[T any](items ...T) Pipeline[None, T] {
+// Of returns a Generator that emits the given items.
+func Of[T any](items ...T) Generator[T] {
 	return func(ctx context.Context, _ Stream[None]) Stream[T] {
-		out := make(chan Item[T])
+		out := make(chan T)
 
 		go func() {
 			defer close(out)
@@ -13,9 +13,8 @@ func Of[T any](items ...T) Pipeline[None, T] {
 			for _, item := range items {
 				select {
 				case <-ctx.Done():
-					out <- Item[T]{Err: ctx.Err()}
 					return
-				case out <- Item[T]{Val: item}:
+				case out <- item:
 				}
 			}
 		}()

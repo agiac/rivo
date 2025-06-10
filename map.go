@@ -3,44 +3,25 @@ package rivo
 import (
 	"context"
 	"fmt"
-	"sync"
 )
 
 // Map returns a pipeline that applies a function to each item from the input stream.
-func Map[T, U any](f func(context.Context, Item[T]) (U, error), opt ...MapOption) Pipeline[T, U] {
+func Map[T, U any](f func(context.Context, T) U, opt ...MapOption) Pipeline[T, U] {
 	o := mustMapOptions(opt)
 
-	return func(ctx context.Context, stream Stream[T]) Stream[U] {
-		out := make(chan Item[U], o.bufferSize)
+	return ForEachOutput[T, U](
+		func(ctx context.Context, val T, out chan<- U) {
+			v := f(ctx, val)
 
-		wg := sync.WaitGroup{}
-		wg.Add(o.poolSize)
-
-		go func() {
-			defer close(out)
-
-			for range o.poolSize {
-				go func() {
-					defer wg.Done()
-
-					for item := range OrDone(ctx, stream) {
-						v, err := f(ctx, item)
-
-						select {
-						case <-ctx.Done():
-							out <- Item[U]{Err: ctx.Err()}
-							return
-						case out <- Item[U]{Val: v, Err: err}:
-						}
-					}
-				}()
+			select {
+			case <-ctx.Done():
+				return
+			case out <- v:
 			}
-
-			wg.Wait()
-		}()
-
-		return out
-	}
+		},
+		ForEachOutputPoolSize(o.poolSize),
+		ForEachOutputBufferSize(o.bufferSize),
+	)
 }
 
 type mapOptions struct {
@@ -95,15 +76,4 @@ func mustMapOptions(opts []MapOption) *mapOptions {
 		panic(fmt.Sprintf("invalid MapOption: %v", err))
 	}
 	return o
-}
-
-func beforeClose[T any](ctx context.Context, out chan<- Item[T], fn func(context.Context) error) {
-	if fn == nil {
-		return
-	}
-
-	err := fn(ctx)
-	if err != nil {
-		out <- Item[T]{Err: err}
-	}
 }

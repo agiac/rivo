@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"github.com/agiac/rivo"
 	"os"
 	"strconv"
+	"sync"
 
-	"github.com/agiac/rivo"
 	rivocsv "github.com/agiac/rivo/csv"
 )
 
 // This example demonstrates how multiple error handling pipelines can be implemented to run concurrently.
+
+// TODO: consider refactor and better abstractions for error handling pipelines.
 
 func main() {
 	ctx := context.Background()
@@ -19,15 +22,29 @@ func main() {
 	f, _ := os.Create("examples/errorHandling/multiplePipeline/errors.csv")
 	defer f.Close()
 
-	vals, errs := rivo.SegregateErrors(ParseAndDouble())
+	basePipeline := ParseAndDouble()
 
-	errs1, errs2 := rivo.Tee(errs)
+	valS, errS := rivo.SegregateStream(ctx, basePipeline(ctx, nil), func(i rivo.Item[int]) bool {
+		return i.Err == nil
+	})
 
-	<-rivo.Connect(
-		rivo.Pipe(vals, LogValues()),
-		rivo.Pipe(errs1, SaveErrors(f)),
-		rivo.Pipe(errs2, LogErrors()),
-	)(ctx, nil)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		<-LogValues()(ctx, valS)
+	}()
+
+	go func() {
+		defer wg.Done()
+		<-rivo.Connect[rivo.Item[int]](
+			SaveErrors(f),
+			LogErrors(),
+		)(ctx, errS)
+	}()
+
+	wg.Wait()
 
 	// Expected output (the order might be different because the handleErrors and handleValues pipeline run concurrently):
 	// Value: 2
@@ -42,49 +59,46 @@ func main() {
 	// Value: 20
 }
 
-func ParseAndDouble() rivo.Pipeline[rivo.None, int] {
+func ParseAndDouble() rivo.Pipeline[rivo.None, rivo.Item[int]] {
 	g := rivo.Of("1", "2", "3_", "4", "5", "6**", "?", "8", "9", "10")
 
-	toInt := rivo.Map(func(ctx context.Context, i rivo.Item[string]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err // Pass errors along
-		}
-
-		return strconv.Atoi(i.Val)
+	toInt := rivo.Map(func(ctx context.Context, i string) rivo.Item[int] {
+		n, err := strconv.Atoi(i)
+		return rivo.Item[int]{Val: n, Err: err}
 	})
 
-	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) (int, error) {
+	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) rivo.Item[int] {
 		if i.Err != nil {
-			return 0, i.Err // Pass errors along
+			return i
 		}
 
-		return i.Val * 2, nil
+		return rivo.Item[int]{Val: i.Val * 2}
 	})
 
-	return rivo.Pipe3(g, toInt, double)
+	return rivo.Pipe3(rivo.Pipeline[rivo.None, string](g), toInt, double)
 }
 
-func SaveErrors(f *os.File) rivo.Pipeline[int, rivo.None] {
-	toCSVError := rivo.Map[int, []string](func(ctx context.Context, i rivo.Item[int]) ([]string, error) {
-		return []string{i.Err.Error()}, nil
+func SaveErrors(f *os.File) rivo.Sync[rivo.Item[int]] {
+	toCSVError := rivo.Map[rivo.Item[int], []string](func(ctx context.Context, i rivo.Item[int]) []string {
+		return []string{i.Err.Error()}
 	})
 
 	save := rivocsv.ToWriter(csv.NewWriter(f))
 
-	logErrors := rivo.Do(func(ctx context.Context, i rivo.Item[struct{}]) {
-		fmt.Printf("Error saving to CSV: %v\n", i.Err)
+	logErrors := rivo.Do(func(ctx context.Context, err error) {
+		fmt.Printf("Error saving to CSV: %v\n", err)
 	})
 
-	return rivo.Pipe3(toCSVError, save, logErrors)
+	return rivo.Sync[rivo.Item[int]](rivo.Pipe3(toCSVError, save, rivo.Pipeline[error, rivo.None](logErrors)))
 }
 
-func LogErrors() rivo.Pipeline[int, rivo.None] {
+func LogErrors() rivo.Sync[rivo.Item[int]] {
 	return rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
 		fmt.Printf("Error: %v\n", i.Err)
 	})
 }
 
-func LogValues() rivo.Pipeline[int, rivo.None] {
+func LogValues() rivo.Sync[rivo.Item[int]] {
 	return rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
 		fmt.Printf("Value: %d\n", i.Val)
 	})

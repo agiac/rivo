@@ -1,43 +1,24 @@
 package rivo
 
-import (
-	"context"
-)
+import "context"
 
-// Tee returns two pipelines that each receive a copy of each item from the input stream.
-func Tee[T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
-	tees := TeeN(p, 2)
-	return tees[0], tees[1]
+// TODO: tests
+
+// TeeStream returns 2 streams that each receive a copy of each item from the input stream.
+func TeeStream[T any](ctx context.Context, in Stream[T]) (Stream[T], Stream[T]) {
+	ss := TeeStreamN(ctx, in, 2)
+	return ss[0], ss[1]
 }
 
-// TeeN returns n pipelines that each receive a copy of each item from the input stream.
-func TeeN[T any](p Pipeline[None, T], n int) []Pipeline[None, T] {
+// TeeStreamN returns n streams that each receive a copy of each item from the input stream.
+func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 	if n <= 1 {
 		panic("n must be greater than 1")
 	}
 
-	streams := teeStream[T](p(context.Background(), nil), n)
-
-	pipes := make([]Pipeline[None, T], n)
+	out := make([]chan T, n)
 	for i := 0; i < n; i++ {
-		tee := streams[i]
-		pipes[i] = func(ctx context.Context, _ Stream[None]) Stream[T] {
-			return tee
-		}
-	}
-
-	return pipes
-}
-
-// teeStream returns n streams that each receive a copy of each item from the input stream.
-func teeStream[T any](in Stream[T], n int) []Stream[T] {
-	if n <= 1 {
-		panic("n must be greater than 1")
-	}
-
-	out := make([]chan Item[T], n)
-	for i := 0; i < n; i++ {
-		out[i] = make(chan Item[T])
+		out[i] = make(chan T)
 	}
 
 	go func() {
@@ -47,7 +28,7 @@ func teeStream[T any](in Stream[T], n int) []Stream[T] {
 			}
 		}()
 
-		for item := range in {
+		for item := range OrDone(ctx, in) {
 			for i := 0; i < n; i++ {
 				out[i] <- item
 			}
@@ -60,4 +41,37 @@ func teeStream[T any](in Stream[T], n int) []Stream[T] {
 	}
 
 	return streams
+}
+
+// Tee returns 2 generators that each receive a copy of each item from the input stream.
+func Tee[T any](ctx context.Context, in Stream[T]) (Generator[T], Generator[T]) {
+	streams := TeeStreamN(ctx, in, 2)
+
+	gen1 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return streams[0]
+	}
+
+	gen2 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return streams[1]
+	}
+
+	return gen1, gen2
+}
+
+// TeeN returns n generators that each receive a copy of each item from the input stream.
+func TeeN[T any](ctx context.Context, in Stream[T], n int) []Generator[T] {
+	if n <= 1 {
+		panic("n must be greater than 1")
+	}
+
+	streams := TeeStreamN(ctx, in, n)
+	generators := make([]Generator[T], n)
+
+	for i := 0; i < n; i++ {
+		generators[i] = func(ctx context.Context, _ Stream[None]) Stream[T] {
+			return streams[i]
+		}
+	}
+
+	return generators
 }

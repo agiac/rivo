@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	. "github.com/agiac/rivo/csv"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,5 +22,5 @@ func TestToWriter(t *testing.T) {
 	out := Collect(Pipe(in, ToWriter(w))(ctx, nil))
 
 	assert.Equal(t, "a,b,c\nd,e,f\ng,h,i\n", b.String())
-	assert.Equal(t, []Item[struct{}](nil), out)
+	assert.Equal(t, []error(nil), out)
 }
