@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+// TODO: consider using ForEachOutput function
+
 type scanOptions struct {
 	PoolSize int
 }

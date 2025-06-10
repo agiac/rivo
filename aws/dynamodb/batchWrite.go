@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+// TODO: consider using ForEachOutput function
+
 type batchWriteOptions struct {
 	PoolSize int
 	ChanSize int
