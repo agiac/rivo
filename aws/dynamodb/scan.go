@@ -3,9 +3,9 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"github.com/agiac/rivo"
 	"sync"
 
-	rivo "github.com/agiac/rivo/core"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"

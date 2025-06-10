@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo/core"
 	. "github.com/agiac/rivo/csv"
 	"github.com/stretchr/testify/assert"
 )

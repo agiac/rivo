@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/agiac/rivo"
 	"strconv"
-
-	rivo "github.com/agiac/rivo/core"
 )
 
 // This example demonstrates the recommended approach to handle errors, in a separate dedicate pipeline.

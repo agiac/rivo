@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/csv"
 	"errors"
+	"github.com/agiac/rivo"
 	"io"
-
-	rivo "github.com/agiac/rivo/core"
 )
 
 // TODO: Add support to discard the header line.

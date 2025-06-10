@@ -3,9 +3,9 @@ package io_test
 import (
 	"bytes"
 	"context"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo/core"
 	. "github.com/agiac/rivo/io"
 	"github.com/stretchr/testify/assert"
 )

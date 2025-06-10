@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"github.com/agiac/rivo"
 	"os"
 	"strconv"
 	"sync"
 
-	rivo "github.com/agiac/rivo/core"
 	rivocsv "github.com/agiac/rivo/csv"
 )
 

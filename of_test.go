@@ -3,10 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	"github.com/agiac/rivo/core"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +17,7 @@ func ExampleOf() {
 	s := in(ctx, nil)
 
 	for item := range s {
-		fmt.Println(item.Val)
+		fmt.Println(item)
 	}
 
 	// Output:
@@ -35,15 +34,9 @@ func TestOf(t *testing.T) {
 
 		p := Of(1, 2, 3, 4, 5)
 
-		got := core.Collect(p(ctx, nil))
+		got := Collect(p(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, want, got)
 	})
@@ -52,10 +45,10 @@ func TestOf(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		Of(1, 2, 3, 4, 5)
+		in := Of(1, 2, 3, 4, 5)(ctx, nil)
 
-		got := Collect(Of(1, 2, 3, 4, 5)(ctx, nil))
+		got := Collect(in)
 
-		assert.Lessf(t, len(got), 5, "expected less than 5 items, got %d", len(got))
+		assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 	})
 }

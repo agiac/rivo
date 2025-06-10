@@ -3,8 +3,7 @@ package bufio
 import (
 	"bufio"
 	"context"
-
-	rivo "github.com/agiac/rivo/core"
+	"github.com/agiac/rivo"
 )
 
 // TODO: consider using ForEachOutput function

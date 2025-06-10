@@ -3,10 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	"github.com/agiac/rivo/core"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,16 +14,16 @@ func ExampleFilter() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	onlyEven := Filter(func(ctx context.Context, i int) bool {
-		return i%2 == 0
+	even := Filter(func(ctx context.Context, n int) bool {
+		return n%2 == 0
 	})
 
-	p := core.Pipe(in, onlyEven)
+	p := Pipe(in, even)
 
 	s := p(ctx, nil)
 
 	for item := range s {
-		fmt.Println(item.Val)
+		fmt.Println(item)
 	}
 
 	// Output:
@@ -33,55 +32,55 @@ func ExampleFilter() {
 }
 
 func TestFilter(t *testing.T) {
+	even := func(ctx context.Context, i int) bool {
+		return i%2 == 0
+	}
+
 	t.Run("filter all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		filterFn := func(ctx context.Context, i int) bool {
-			return i%2 == 0
-		}
-
 		g := Of(1, 2, 3, 4, 5)
+		f := Filter(even)
 
-		f := Filter(filterFn)
-
-		got := core.Collect(core.Pipe(g, f)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 4},
-		}
+		got := Collect(Pipe(g, f)(ctx, nil))
+		want := []int{2, 4}
 
 		assert.Equal(t, want, got)
 	})
 
-	t.Run("filter with error", func(t *testing.T) {
+	t.Run("with context cancelled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		g := Of(1, 2, 3, 4, 5)
+		f := Filter(even)
+
+		got := Collect(f(ctx, g(ctx, nil)))
+
+		assert.Lessf(t, len(got), 5, "expected less than 5 items, got %d", len(got))
+	})
+
+	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		filterFn := func(ctx context.Context, i int) bool {
-			return i%2 == 0
-		}
+		g := Of(1, 2, 3, 4, 5)
+		f := Filter(even, FilterBufferSize(3))
 
-		in := make(chan Item[int])
-		go func() {
-			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-			in <- Item[int]{Err: assert.AnError} // Simulating an error
-			in <- Item[int]{Val: 3}
-			in <- Item[int]{Val: 4}
-			in <- Item[int]{Val: 5}
-		}()
-
-		f := Filter(filterFn)
-
-		got := core.Collect(f(ctx, in))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Err: assert.AnError},
-			{Val: 4},
-		}
+		got := Collect(f(ctx, g(ctx, nil)))
+		want := []int{2, 4}
 
 		assert.Equal(t, want, got)
+	})
+
+	t.Run("with pool size", func(t *testing.T) {
+		ctx := context.Background()
+
+		g := Of(1, 2, 3, 4, 5)
+		f := Filter(even, FilterPoolSize(3))
+
+		got := Collect(Pipe(g, f)(ctx, nil))
+		want := []int{2, 4}
+
+		assert.ElementsMatch(t, want, got)
 	})
 }

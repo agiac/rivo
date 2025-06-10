@@ -3,8 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-
-	rivo "github.com/agiac/rivo/core"
+	"github.com/agiac/rivo"
 )
 
 // This example demonstrates a basic usage of pipelines and the Pipe function.

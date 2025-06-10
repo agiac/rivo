@@ -5,11 +5,11 @@ import (
 	"context"
 	_ "embed"
 	"encoding/csv"
+	"github.com/agiac/rivo"
 	"log"
 	"strings"
 	"time"
 
-	rivo "github.com/agiac/rivo/core"
 	rivocsv "github.com/agiac/rivo/csv"
 )
 

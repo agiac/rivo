@@ -1,9 +1,9 @@
-package core_test
+package rivo_test
 
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo/core"
+	. "github.com/agiac/rivo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

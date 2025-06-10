@@ -13,7 +13,7 @@ func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
 	o := assertBatchOptions(opt)
 
 	return func(ctx context.Context, in Stream[T]) Stream[[]T] {
-		out := make(chan Item[[]T], o.bufferSize)
+		out := make(chan []T, o.bufferSize)
 
 		go func() {
 			defer close(out)
@@ -29,43 +29,24 @@ func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
 			sendBatch := func() (exit bool) {
 				if len(batch) > 0 {
 					select {
+					case out <- copyBatch():
+						batch = batch[:0]
 					case <-ctx.Done():
 						return true
-					case out <- Item[[]T]{Val: copyBatch()}:
-						batch = batch[:0]
 					}
-				}
-				return false
-			}
-
-			sendError := func(err error) (exit bool) {
-				select {
-				case <-ctx.Done():
-					return true
-				case out <- Item[[]T]{Err: err}:
 				}
 				return false
 			}
 
 			for {
 				select {
-				case <-ctx.Done():
-					return
 				case item, ok := <-in:
 					if !ok {
 						sendBatch()
 						return
 					}
 
-					if item.Err != nil {
-						if exit := sendError(item.Err); exit {
-							return
-						}
-
-						continue
-					}
-
-					batch = append(batch, item.Val)
+					batch = append(batch, item)
 
 					if len(batch) == n {
 						if exit := sendBatch(); exit {
@@ -76,9 +57,10 @@ func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
 					if exit := sendBatch(); exit {
 						return
 					}
+				case <-ctx.Done():
+					return
 				}
 			}
-
 		}()
 
 		return out

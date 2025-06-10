@@ -2,39 +2,40 @@ package rivo
 
 import "context"
 
-// Segregate returns two pipelines, where the first pipeline emits items that pass the predicate, and the second pipeline emits items that do not pass the predicate.
-func Segregate[T any](p Pipeline[None, T], predicate func(item Item[T]) bool) (Pipeline[None, T], Pipeline[None, T]) {
-	out1 := make(chan Item[T])
-	out2 := make(chan Item[T])
+// TODO: tests
 
-	p1 := func(ctx context.Context, _ Stream[None]) Stream[T] {
-		return out1
-	}
-
-	p2 := func(ctx context.Context, _ Stream[None]) Stream[T] {
-		return out2
-	}
+// SegregateStream takes an input stream and a predicate function, and returns two streams:
+// one containing items that satisfy the predicate and another containing items that do not.
+func SegregateStream[T any](ctx context.Context, in Stream[T], predicate func(T) bool) (Stream[T], Stream[T]) {
+	trueStream := make(chan T)
+	falseStream := make(chan T)
 
 	go func() {
-		defer close(out1)
-		defer close(out2)
+		defer close(trueStream)
+		defer close(falseStream)
 
-		// TODO: Handle context cancellation
-		for item := range p(context.Background(), nil) {
+		for item := range OrDone(ctx, in) {
 			if predicate(item) {
-				out1 <- item
+				trueStream <- item
 			} else {
-				out2 <- item
+				falseStream <- item
 			}
 		}
 	}()
 
-	return p1, p2
+	return trueStream, falseStream
 }
 
-// SegregateErrors returns two pipelines, where the first pipeline emits items without errors, and the second pipeline emits items with errors.
-func SegregateErrors[T any](p Pipeline[None, T]) (Pipeline[None, T], Pipeline[None, T]) {
-	return Segregate[T](p, func(item Item[T]) bool {
-		return item.Err == nil
-	})
+func Segregate[T any](ctx context.Context, in Stream[T], predicate func(T) bool) (Generator[T], Generator[T]) {
+	trueStream, falseStream := SegregateStream(ctx, in, predicate)
+
+	trueGen := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return trueStream
+	}
+
+	falseGen := func(ctx context.Context, _ Stream[None]) Stream[T] {
+		return falseStream
+	}
+
+	return trueGen, falseGen
 }

@@ -3,8 +3,7 @@ package csv
 import (
 	"context"
 	"encoding/csv"
-
-	rivo "github.com/agiac/rivo/core"
+	"github.com/agiac/rivo"
 )
 
 // ToWriter returns a pipeline that writes to a csv.Writer. Only errors from the

@@ -3,8 +3,8 @@ package bufio
 import (
 	"bufio"
 	"context"
+	"github.com/agiac/rivo"
 
-	rivo "github.com/agiac/rivo/core"
 	"github.com/agiac/rivo/io"
 )
 

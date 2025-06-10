@@ -2,9 +2,8 @@ package io
 
 import (
 	"context"
+	"github.com/agiac/rivo"
 	"io"
-
-	rivo "github.com/agiac/rivo/core"
 )
 
 // TODO: consider using ForEachOutput function

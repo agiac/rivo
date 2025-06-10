@@ -3,10 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	"github.com/agiac/rivo/core"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,21 +14,16 @@ func ExampleMap() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	double := Map(func(ctx context.Context, i Item[int]) (int, error) {
-		// Always check for errors
-		if i.Err != nil {
-			return 0, i.Err // Propagate the error
-		}
-
-		return i.Val * 2, nil
+	double := Map(func(ctx context.Context, n int) int {
+		return n * 2
 	})
 
-	p := core.Pipe(in, double)
+	p := Pipe(in, double)
 
 	s := p(ctx, nil)
 
-	for item := range s {
-		fmt.Println(item.Val)
+	for n := range s {
+		fmt.Println(n)
 	}
 
 	// Output:
@@ -44,50 +38,17 @@ func TestMap(t *testing.T) {
 	t.Run("map all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
+		mapFn := func(ctx context.Context, n int) int {
+			return n + 1
 		}
 
 		g := Of(1, 2, 3, 4, 5)
 
 		m := Map(mapFn)
 
-		got := core.Collect(core.Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-			{Val: 6},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("map all items with error", func(t *testing.T) {
-		ctx := context.Background()
-
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Val == 3 {
-				return 0, assert.AnError
-			}
-			return i.Val + 1, nil
-		}
-
-		g := Of(1, 2, 3, 4, 5)
-
-		m := Map(mapFn)
-
-		got := core.Collect(core.Pipe(g, m)(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Err: assert.AnError},
-			{Val: 5},
-			{Val: 6},
-		}
+		want := []int{2, 3, 4, 5, 6}
 
 		assert.Equal(t, want, got)
 	})
@@ -95,12 +56,8 @@ func TestMap(t *testing.T) {
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			if i.Err != nil {
-				return 0, i.Err
-			}
-
-			return i.Val + 1, nil
+		mapFn := func(ctx context.Context, n int) int {
+			return n + 1
 		}
 
 		ctx, cancel := context.WithCancel(ctx)
@@ -109,7 +66,7 @@ func TestMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 6)
 		m := Map(mapFn)
 
-		got := core.Collect(core.Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -117,30 +74,26 @@ func TestMap(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
+		mapFn := func(ctx context.Context, n int) int {
+			return n + 1
 		}
 
-		in := make(chan Item[int])
+		in := make(chan int)
 
 		go func() {
 			defer close(in)
-			in <- Item[int]{Val: 1}
-			in <- Item[int]{Val: 2}
-			in <- Item[int]{Val: 3}
+			in <- 1
+			in <- 2
+			in <- 3
 		}()
 
-		m := Map(mapFn, core.MapBufferSize(3))
+		m := Map(mapFn, MapBufferSize(3))
 
 		out := m(ctx, in)
 
-		got := core.Collect(out)
+		got := Collect(out)
 
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-		}
+		want := []int{2, 3, 4}
 
 		assert.Equal(t, 3, cap(out))
 		assert.Equal(t, want, got)
@@ -149,23 +102,17 @@ func TestMap(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, i Item[int]) (int, error) {
-			return i.Val + 1, nil
+		mapFn := func(ctx context.Context, n int) int {
+			return n + 1
 		}
 
 		in := Of(1, 2, 3, 4, 5)
 
-		m := Map(mapFn, core.MapPoolSize(3))
+		m := Map(mapFn, MapPoolSize(3))
 
-		got := core.Collect(core.Pipe(in, m)(ctx, nil))
+		got := Collect(Pipe(in, m)(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-			{Val: 6},
-		}
+		want := []int{2, 3, 4, 5, 6}
 
 		assert.ElementsMatch(t, want, got)
 	})
