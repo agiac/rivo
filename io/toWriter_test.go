@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/agiac/rivo"
+	. "github.com/agiac/rivo/core"
 	. "github.com/agiac/rivo/io"
 	"github.com/stretchr/testify/assert"
 )

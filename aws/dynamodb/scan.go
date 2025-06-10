@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/agiac/rivo"
+	rivo "github.com/agiac/rivo/core"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -43,13 +43,13 @@ func ScanPoolSize(poolSize int) ScanOption {
 }
 
 // Scan returns a pipeline which scans the provided DynamoDB table and emits the scan output responses;
-func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, *dynamodb.ScanOutput] {
+func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, rivo.Item[*dynamodb.ScanOutput]] {
 	o, err := applyScanOptions(newDefaultScanOptions(), opt)
 	if err != nil {
 		panic(fmt.Sprintf("invalid ScanOption: %v", err))
 	}
 
-	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[*dynamodb.ScanOutput] {
+	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[rivo.Item[*dynamodb.ScanOutput]] {
 		out := make(chan rivo.Item[*dynamodb.ScanOutput])
 
 		go func() {
@@ -102,16 +102,21 @@ func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption)
 }
 
 // ScanItems returns a pipeline which scans the provided DynamoDB table and emits the items from the scan output responses.
-func ScanItems(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, map[string]types.AttributeValue] {
+func ScanItems(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, rivo.Item[map[string]types.AttributeValue]] {
 	tableScan := Scan(client, input, opt...)
 
-	itemsMap := rivo.Map[*dynamodb.ScanOutput, []map[string]types.AttributeValue](func(ctx context.Context, i rivo.Item[*dynamodb.ScanOutput]) ([]map[string]types.AttributeValue, error) {
+	itemsMap := rivo.Map[rivo.Item[*dynamodb.ScanOutput], []rivo.Item[map[string]types.AttributeValue]](func(ctx context.Context, i rivo.Item[*dynamodb.ScanOutput]) []rivo.Item[map[string]types.AttributeValue] {
 		if i.Err != nil {
-			return nil, i.Err
+			return []rivo.Item[map[string]types.AttributeValue]{{Err: i.Err}}
 		}
 
-		return i.Val.Items, nil
+		items := make([]rivo.Item[map[string]types.AttributeValue], 0, len(i.Val.Items))
+		for _, item := range i.Val.Items {
+			items = append(items, rivo.Item[map[string]types.AttributeValue]{Val: item})
+		}
+
+		return items
 	})
 
-	return rivo.Pipe3(tableScan, itemsMap, rivo.Flatten[map[string]types.AttributeValue]())
+	return rivo.Pipe3(tableScan, itemsMap, rivo.Flatten[rivo.Item[map[string]types.AttributeValue]]())
 }

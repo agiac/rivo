@@ -29,7 +29,7 @@ func TestSuite(t *testing.T) {
 	if os.Getenv("INTEGRATION_TESTS") != "true" {
 		t.Skip("skipping integration tests")
 	}
-
+≠
 	suite.Run(t, new(Suite))
 }
 
