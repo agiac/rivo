@@ -3,12 +3,11 @@ package bufio_test
 import (
 	"bufio"
 	"context"
-	"strings"
-	"testing"
-
 	. "github.com/agiac/rivo"
 	. "github.com/agiac/rivo/bufio"
 	"github.com/stretchr/testify/assert"
+	"strings"
+	"testing"
 )
 
 func TestFromScanner(t *testing.T) {

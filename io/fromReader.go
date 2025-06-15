@@ -2,14 +2,15 @@ package io
 
 import (
 	"context"
-	"io"
-
 	"github.com/agiac/rivo"
+	"io"
 )
 
+// TODO: consider using ForEachOutput function
+
 // FromReader returns a pipeline that reads from an io.Reader.
-func FromReader(r io.Reader) rivo.Pipeline[rivo.None, []byte] {
-	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[[]byte] {
+func FromReader(r io.Reader) rivo.Pipeline[rivo.None, rivo.Item[[]byte]] {
+	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[rivo.Item[[]byte]] {
 		out := make(chan rivo.Item[[]byte])
 
 		go func() {

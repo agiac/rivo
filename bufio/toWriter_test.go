@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	. "github.com/agiac/rivo/bufio"
 	"github.com/stretchr/testify/assert"
 )

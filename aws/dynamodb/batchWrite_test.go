@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/agiac/rivo"
 	rivodynamodb "github.com/agiac/rivo/aws/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -15,16 +14,16 @@ import (
 func (s *Suite) TestBatchPutItems() {
 	ctx := context.Background()
 
-	in := make(chan rivo.Item[types.PutRequest])
+	in := make(chan types.PutRequest)
 	go func() {
 		defer close(in)
 		for i := range tableItems {
-			in <- rivo.Item[types.PutRequest]{Val: types.PutRequest{
+			in <- types.PutRequest{
 				Item: map[string]types.AttributeValue{
 					"PK": &types.AttributeValueMemberS{Value: fmt.Sprintf("PK-%d", i)},
 					"SK": &types.AttributeValueMemberS{Value: fmt.Sprintf("SK-%d", i)},
 				},
-			}}
+			}
 		}
 	}()
 
