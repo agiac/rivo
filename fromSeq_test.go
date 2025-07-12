@@ -3,10 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	. "github.com/agiac/rivo"
 	"slices"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func ExampleFromSeq() {
 	s := in(ctx, nil)
 
 	for item := range s {
-		fmt.Println(item.Val)
+		fmt.Println(item)
 	}
 
 	// Output:
@@ -39,13 +39,7 @@ func TestFromSeq(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, want, got)
 	})
@@ -61,7 +55,7 @@ func ExampleFromSeq2() {
 	s := in(ctx, nil)
 
 	for item := range s {
-		fmt.Printf("%d, %s\n", item.Val.Val1, item.Val.Val2)
+		fmt.Printf("%d, %s\n", item.Val1, item.Val2)
 	}
 
 	// Output:
@@ -82,12 +76,12 @@ func TestFromSeq2(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		want := []Item[FromSeq2Value[int, string]]{
-			{Val: FromSeq2Value[int, string]{Val1: 0, Val2: "a"}},
-			{Val: FromSeq2Value[int, string]{Val1: 1, Val2: "b"}},
-			{Val: FromSeq2Value[int, string]{Val1: 2, Val2: "c"}},
-			{Val: FromSeq2Value[int, string]{Val1: 3, Val2: "d"}},
-			{Val: FromSeq2Value[int, string]{Val1: 4, Val2: "e"}},
+		want := []FromSeq2Value[int, string]{
+			{Val1: 0, Val2: "a"},
+			{Val1: 1, Val2: "b"},
+			{Val1: 2, Val2: "c"},
+			{Val1: 3, Val2: "d"},
+			{Val1: 4, Val2: "e"},
 		}
 
 		assert.Equal(t, want, got)

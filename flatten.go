@@ -6,44 +6,13 @@ import (
 
 // Flatten returns a Pipeline that flattens a Stream of slices into a Stream of individual items.
 func Flatten[T any]() Pipeline[[]T, T] {
-	return func(ctx context.Context, in Stream[[]T]) Stream[T] {
-		out := make(chan Item[T])
-
-		go func() {
-			defer close(out)
-
-			for {
-				select {
-				case item, ok := <-in:
-					if !ok {
-						return
-					}
-
-					if item.Err != nil {
-						select {
-						case out <- Item[T]{Err: item.Err}:
-							continue
-						case <-ctx.Done():
-							out <- Item[T]{Err: ctx.Err()}
-							return
-						}
-					}
-
-					for _, val := range item.Val {
-						select {
-						case out <- Item[T]{Val: val}:
-						case <-ctx.Done():
-							out <- Item[T]{Err: ctx.Err()}
-							return
-						}
-					}
-				case <-ctx.Done():
-					out <- Item[T]{Err: ctx.Err()}
-					return
-				}
+	return ForEachOutput[[]T, T](func(ctx context.Context, val []T, out chan<- T) {
+		for _, item := range val {
+			select {
+			case <-ctx.Done():
+				return
+			case out <- item:
 			}
-		}()
-
-		return out
-	}
+		}
+	})
 }

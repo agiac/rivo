@@ -2,18 +2,16 @@ package io
 
 import (
 	"context"
-	"io"
-
 	"github.com/agiac/rivo"
+	"io"
 )
 
-// ToWriter returns a pipeline that writes to an io.Writer.
-func ToWriter(w io.Writer) rivo.Pipeline[[]byte, int] {
-	return rivo.Map(func(ctx context.Context, i rivo.Item[[]byte]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err
-		}
+// TODO: consider using ForEachOutput function
 
-		return w.Write(i.Val)
+// ToWriter returns a pipeline that writes to an io.Writer.
+func ToWriter(w io.Writer) rivo.Pipeline[[]byte, rivo.Item[int]] {
+	return rivo.Map[[]byte, rivo.Item[int]](func(ctx context.Context, v []byte) rivo.Item[int] {
+		n, err := w.Write(v)
+		return rivo.Item[int]{Val: n, Err: err}
 	})
 }

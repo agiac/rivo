@@ -3,7 +3,7 @@ package dynamodb_test
 import (
 	"context"
 	"fmt"
-	"os"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-)
 
-// TODO: use Test Containers https://golang.testcontainers.org/features/docker_compose/
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+)
 
 const scanTableName = "scanTableTest"
 const writeTableName = "writeTableTest"
@@ -22,19 +23,38 @@ const tableItems = 1000
 
 type Suite struct {
 	suite.Suite
-	db *dynamodb.Client
+	dynamoC testcontainers.Container
+	db      *dynamodb.Client
 }
 
 func TestSuite(t *testing.T) {
-	if os.Getenv("INTEGRATION_TESTS") != "true" {
-		t.Skip("skipping integration tests")
+	if testing.Short() {
+		t.Skipf("skipping test in short mode")
 	}
-
 	suite.Run(t, new(Suite))
 }
 
 func (s *Suite) SetupSuite() {
-	s.db = CreateDynamodbClient(s.T())
+	ctx := context.Background()
+
+	var err error
+	s.dynamoC, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Image:        "amazon/dynamodb-local:latest",
+			ExposedPorts: []string{"8000"},
+			WaitingFor:   wait.ForListeningPort("8000"),
+		},
+		Started: true,
+	})
+	s.Require().NoError(err)
+
+	host, err := s.dynamoC.Host(ctx)
+	s.Require().NoError(err)
+
+	mappedPort, err := s.dynamoC.MappedPort(ctx, "8000")
+	s.Require().NoError(err)
+
+	s.db = CreateDynamodbClient(s.T(), fmt.Sprintf("http://%s:%d", host, mappedPort.Int()))
 
 	for _, tableName := range []string{scanTableName, writeTableName} {
 		CreateDynamodbTable(s.T(), s.db, tableName)
@@ -49,18 +69,19 @@ func (s *Suite) SetupSuite() {
 }
 
 func (s *Suite) TearDownSuite() {
-	for _, tableName := range []string{scanTableName, writeTableName} {
-		DeleteDynamodbTable(s.T(), s.db, tableName)
-	}
+	s.Require().NoError(testcontainers.TerminateContainer(s.dynamoC))
 }
 
-func CreateDynamodbClient(t *testing.T) *dynamodb.Client {
-	dynamodbEndpoint := os.Getenv("DYNAMODB_ENDPOINT")
-	if dynamodbEndpoint == "" {
-		dynamodbEndpoint = "http://localhost:8000"
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithBaseEndpoint(dynamodbEndpoint))
+func CreateDynamodbClient(t *testing.T, dynamodbEndpoint string) *dynamodb.Client {
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithBaseEndpoint(dynamodbEndpoint),
+		config.WithDefaultRegion("eu-central-1"),
+		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
+			Value: aws.Credentials{
+				AccessKeyID:     "foo",
+				SecretAccessKey: "bar",
+			},
+		}))
 	require.NoError(t, err)
 	return dynamodb.NewFromConfig(cfg)
 }
@@ -89,13 +110,6 @@ func CreateDynamodbTable(t *testing.T, client *dynamodb.Client, tableName string
 			},
 		},
 		BillingMode: types.BillingModePayPerRequest,
-	})
-	require.NoError(t, err)
-}
-
-func DeleteDynamodbTable(t *testing.T, client *dynamodb.Client, tableName string) {
-	_, err := client.DeleteTable(context.Background(), &dynamodb.DeleteTableInput{
-		TableName: aws.String(tableName),
 	})
 	require.NoError(t, err)
 }

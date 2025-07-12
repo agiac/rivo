@@ -3,33 +3,35 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
-
 	"github.com/agiac/rivo"
+	"strconv"
 )
 
-// This example demonstrates the simplest way to handle errors in a pipeline,
-// by doing so together with the other values in one of more stages.
+// This example demonstrates the simplest way to handle errors in a pipeline:
+// we use rivo.Item to pass both values and errors through the pipeline,
+// allowing us to handle errors at any point in the pipeline without stopping the entire stream.
+// In this example, the errors are propagated through the pipeline, until we reach the end where we handle them,
+// together with the values, in a single place.
 
 func main() {
 	ctx := context.Background()
 
 	g := rivo.Of("1", "2", "3_", "4", "5", "6**", "?", "8", "9", "10")
 
-	toInt := rivo.Map(func(ctx context.Context, i rivo.Item[string]) (int, error) {
-		if i.Err != nil {
-			return 0, i.Err // Pass errors along
+	toInt := rivo.Map(func(ctx context.Context, s string) rivo.Item[int] {
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			return rivo.Item[int]{Err: err} // Return an item with the error
 		}
-
-		return strconv.Atoi(i.Val)
+		return rivo.Item[int]{Val: n} // Return an item with the value
 	})
 
-	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) (int, error) {
+	double := rivo.Map(func(ctx context.Context, i rivo.Item[int]) rivo.Item[int] {
 		if i.Err != nil {
-			return 0, i.Err // Pass errors along
+			return i // If there's an error, return it as is
 		}
 
-		return i.Val * 2, nil
+		return rivo.Item[int]{Val: i.Val * 2} // Otherwise, double the value
 	})
 
 	handleValuesAndErrors := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {

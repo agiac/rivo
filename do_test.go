@@ -2,39 +2,31 @@ package rivo_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	. "github.com/agiac/rivo"
 	"sync/atomic"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
 func ExampleDo() {
 	ctx := context.Background()
 
-	in := make(chan Item[int])
-	go func() {
-		defer close(in)
-		in <- Item[int]{Val: 1}
-		in <- Item[int]{Val: 2}
-		in <- Item[int]{Err: errors.New("error 1")}
-		in <- Item[int]{Val: 4}
-		in <- Item[int]{Err: errors.New("error 2")}
-	}()
+	g := Of(1, 2, 3, 4, 5)
 
-	d := Do(func(ctx context.Context, i Item[int]) {
-		if i.Err != nil {
-			fmt.Printf("ERROR: %v\n", i.Err)
-		}
+	d := Do(func(ctx context.Context, i int) {
+		fmt.Println(i)
 	})
 
-	<-d(ctx, in)
+	<-Pipe(g, d)(ctx, nil)
 
 	// Output:
-	// ERROR: error 1
-	// ERROR: error 2
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
 }
 
 func TestDo(t *testing.T) {
@@ -45,7 +37,7 @@ func TestDo(t *testing.T) {
 
 		g := Of(1, 2, 3, 4, 5)
 
-		d := Do(func(ctx context.Context, i Item[int]) {
+		d := Do(func(ctx context.Context, i int) {
 			count++
 		})
 
@@ -58,24 +50,21 @@ func TestDo(t *testing.T) {
 
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		cancel()
 
 		count := 0
 
 		g := Of(1, 2, 3, 4, 5)
 
-		d := Do(func(ctx context.Context, i Item[int]) {
+		d := Do(func(ctx context.Context, i int) {
 			count++
-			if i.Val == 3 {
-				cancel()
-			}
 		})
 
 		p := Pipe(g, d)
 
 		<-p(ctx, nil)
 
-		assert.LessOrEqual(t, 4, count)
+		assert.Lessf(t, count, 5, "count should be less than 5 when context is cancelled")
 	})
 
 	t.Run("with pool size", func(t *testing.T) {
@@ -85,7 +74,7 @@ func TestDo(t *testing.T) {
 
 		g := Of[int32](1, 2, 3, 4, 5)
 
-		d := Do(func(ctx context.Context, i Item[int32]) {
+		d := Do(func(ctx context.Context, i int32) {
 			count.Add(1)
 		}, DoPoolSize(3))
 
@@ -94,5 +83,28 @@ func TestDo(t *testing.T) {
 		<-p(ctx, nil)
 
 		assert.Equal(t, int32(5), count.Load())
+	})
+
+	t.Run("with onBeforeClose", func(t *testing.T) {
+		ctx := context.Background()
+
+		count := atomic.Int32{}
+
+		g := Of[int32](1, 2, 3, 4, 5)
+
+		onBeforeCloseCalled := false
+
+		d := Do(func(ctx context.Context, i int32) {
+			count.Add(1)
+		}, DoOnBeforeClose(func(ctx context.Context) {
+			onBeforeCloseCalled = true
+		}))
+
+		p := Pipe(g, d)
+
+		<-p(ctx, nil)
+
+		assert.Equal(t, int32(5), count.Load())
+		assert.True(t, onBeforeCloseCalled)
 	})
 }

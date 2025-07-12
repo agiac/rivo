@@ -3,10 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	. "github.com/agiac/rivo"
 	"sync/atomic"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,14 +15,14 @@ func ExampleFromFunc() {
 
 	count := atomic.Int32{}
 
-	genFn := func(ctx context.Context) (int32, error) {
+	genFn := func(ctx context.Context) (int32, bool) {
 		value := count.Add(1)
 
 		if value > 5 {
-			return 0, ErrEOS
+			return 0, false
 		}
 
-		return value, nil
+		return value, true
 	}
 
 	in := FromFunc(genFn)
@@ -30,7 +30,7 @@ func ExampleFromFunc() {
 	s := in(ctx, nil)
 
 	for item := range s {
-		fmt.Println(item.Val)
+		fmt.Println(item)
 	}
 
 	// Output:
@@ -45,87 +45,52 @@ func TestFromFunc(t *testing.T) {
 	t.Run("generate items from function", func(t *testing.T) {
 		ctx := context.Background()
 		count := 0
-		genFn := func(ctx context.Context) (int, error) {
+		genFn := func(ctx context.Context) (int, bool) {
 			count++
 			if count > 5 {
-				return 0, ErrEOS
+				return 0, false
 			}
-			return count, nil
+			return count, true
 		}
 
 		f := FromFunc(genFn)
 
 		got := Collect(f(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("generate items with error", func(t *testing.T) {
-		ctx := context.Background()
-		count := 0
-		genFn := func(ctx context.Context) (int, error) {
-			count++
-			if count == 3 {
-				return 0, assert.AnError
-			}
-			if count > 5 {
-				return 0, ErrEOS
-			}
-			return count, nil
-		}
-
-		f := FromFunc(genFn)
-
-		got := Collect(f(ctx, nil))
-
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Err: assert.AnError},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		cancel()
 
 		count := 0
-		genFn := func(ctx context.Context) (int, error) {
+		genFn := func(ctx context.Context) (int, bool) {
 			count++
-			if count > 2 {
-				cancel()
+			if count > 5 {
+				return 0, false
 			}
-			return count, nil
+			return count, true
 		}
 
 		f := FromFunc(genFn)
 
 		got := Collect(f(ctx, nil))
 
-		assert.Equal(t, context.Canceled, got[len(got)-1].Err)
+		assert.Less(t, len(got), 5, "should not generate more than 5 items when context is cancelled")
 	})
 
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 		count := 0
-		genFn := func(ctx context.Context) (int, error) {
+		genFn := func(ctx context.Context) (int, bool) {
 			count++
-			if count > 3 {
-				return 0, ErrEOS
+			if count > 5 {
+				return 0, false
 			}
-			return count, nil
+			return count, true
 		}
 
 		f := FromFunc(genFn, FromFuncBufferSize(3))
@@ -134,11 +99,7 @@ func TestFromFunc(t *testing.T) {
 
 		got := Collect(out)
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, 3, cap(out))
 		assert.Equal(t, want, got)
@@ -147,25 +108,19 @@ func TestFromFunc(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 		count := atomic.Int32{}
-		genFn := func(ctx context.Context) (int, error) {
+		genFn := func(ctx context.Context) (int, bool) {
 			v := int(count.Add(1))
 			if v > 5 {
-				return 0, ErrEOS
+				return 0, false
 			}
-			return v, nil
+			return v, true
 		}
 
 		f := FromFunc(genFn, FromFuncPoolSize(3))
 
 		got := Collect(f(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.ElementsMatch(t, want, got)
 	})
@@ -173,30 +128,23 @@ func TestFromFunc(t *testing.T) {
 	t.Run("with on before close", func(t *testing.T) {
 		ctx := context.Background()
 		var n int
-		genFn := func(ctx context.Context) (int, error) {
+		genFn := func(ctx context.Context) (int, bool) {
 			n++
 			if n > 5 {
-				return 0, ErrEOS
+				return 0, false
 			}
-			return n, nil
+			return n, true
 		}
 
 		beforeCloseCalled := atomic.Bool{}
 
-		f := FromFunc(genFn, FromFuncOnBeforeClose(func(ctx context.Context) error {
+		f := FromFunc(genFn, FromFuncOnBeforeClose(func(ctx context.Context) {
 			beforeCloseCalled.Store(true)
-			return nil
 		}))
 
 		got := Collect(f(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, want, got)
 		assert.True(t, beforeCloseCalled.Load())

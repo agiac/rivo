@@ -9,16 +9,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ExampleMap() {
+func ExampleForEachOutput() {
 	ctx := context.Background()
 
 	in := Of(1, 2, 3, 4, 5)
 
-	double := Map(func(ctx context.Context, n int) int {
-		return n * 2
-	})
+	f := func(ctx context.Context, n int, out chan<- int) {
+		out <- n * 2
+	}
 
-	p := Pipe(in, double)
+	p := Pipe(in, ForEachOutput(f))
 
 	s := p(ctx, nil)
 
@@ -34,39 +34,39 @@ func ExampleMap() {
 	// 10
 }
 
-func TestMap(t *testing.T) {
-	t.Run("map all items", func(t *testing.T) {
+func TestForEachOutput(t *testing.T) {
+	t.Run("for each output all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		f := func(ctx context.Context, n int, out chan<- int) {
+			out <- n + 1
 		}
 
 		g := Of(1, 2, 3, 4, 5)
 
-		m := Map(mapFn)
+		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 
-		assert.Equal(t, want, got)
+		assert.ElementsMatch(t, want, got)
 	})
 
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		f := func(ctx context.Context, n int, out chan<- int) {
+			out <- n + 1
 		}
 
 		ctx, cancel := context.WithCancel(ctx)
 		cancel()
 
 		g := Of(1, 2, 3, 4, 6)
-		m := Map(mapFn)
+		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -74,8 +74,8 @@ func TestMap(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		f := func(ctx context.Context, n int, out chan<- int) {
+			out <- n + 1
 		}
 
 		in := make(chan int)
@@ -87,30 +87,30 @@ func TestMap(t *testing.T) {
 			in <- 3
 		}()
 
-		m := Map(mapFn, MapBufferSize(3))
+		fo := ForEachOutput(f, ForEachOutputBufferSize(3))
 
-		out := m(ctx, in)
+		out := fo(ctx, in)
 
 		got := Collect(out)
 
 		want := []int{2, 3, 4}
 
 		assert.Equal(t, 3, cap(out))
-		assert.Equal(t, want, got)
+		assert.ElementsMatch(t, want, got)
 	})
 
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		f := func(ctx context.Context, n int, out chan<- int) {
+			out <- n + 1
 		}
 
 		in := Of(1, 2, 3, 4, 5)
 
-		m := Map(mapFn, MapPoolSize(3))
+		fo := ForEachOutput(f, ForEachOutputPoolSize(3))
 
-		got := Collect(Pipe(in, m)(ctx, nil))
+		got := Collect(Pipe(in, fo)(ctx, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 

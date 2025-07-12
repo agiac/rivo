@@ -3,9 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
+	. "github.com/agiac/rivo"
 	"testing"
 
-	. "github.com/agiac/rivo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func ExampleOf() {
 	s := in(ctx, nil)
 
 	for item := range s {
-		fmt.Println(item.Val)
+		fmt.Println(item)
 	}
 
 	// Output:
@@ -36,35 +36,19 @@ func TestOf(t *testing.T) {
 
 		got := Collect(p(ctx, nil))
 
-		want := []Item[int]{
-			{Val: 1},
-			{Val: 2},
-			{Val: 3},
-			{Val: 4},
-			{Val: 5},
-		}
+		want := []int{1, 2, 3, 4, 5}
 
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("context cancelled", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		cancel()
 
 		in := Of(1, 2, 3, 4, 5)(ctx, nil)
 
-		first := <-in
-		second := <-in
-		third := <-in
-		cancel()
-		fourth := <-in
-		fifth, ok := <-in
+		got := Collect(in)
 
-		assert.Equal(t, Item[int]{Val: 1}, first)
-		assert.Equal(t, Item[int]{Val: 2}, second)
-		assert.Equal(t, Item[int]{Val: 3}, third)
-		assert.Equal(t, Item[int]{Err: context.Canceled}, fourth)
-		assert.Equal(t, Item[int]{}, fifth)
-		assert.False(t, ok)
+		assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 	})
 }

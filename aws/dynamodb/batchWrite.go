@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/agiac/rivo"
 	"sync"
 	"time"
 
-	"github.com/agiac/rivo"
 	awsdynamodb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
+
+// TODO: consider using ForEachOutput function
 
 type batchWriteOptions struct {
 	PoolSize int
@@ -56,13 +58,13 @@ func BatchWriteChanSize(chanSize int) BatchWriteOption {
 }
 
 // BatchWrite returns a pipeline which writes the input stream to the provided DynamoDB using the BatchWriteItem API.
-func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeline[*awsdynamodb.BatchWriteItemInput, *awsdynamodb.BatchWriteItemOutput] {
+func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeline[*awsdynamodb.BatchWriteItemInput, rivo.Item[*awsdynamodb.BatchWriteItemOutput]] {
 	o, err := applyBatchWriteOptions(newDefaultBatchWriteOptions(), opt)
 	if err != nil {
 		panic(fmt.Sprintf("invalid BatchWriteOption: %v", err))
 	}
 
-	return func(ctx context.Context, in rivo.Stream[*awsdynamodb.BatchWriteItemInput]) rivo.Stream[*awsdynamodb.BatchWriteItemOutput] {
+	return func(ctx context.Context, in rivo.Stream[*awsdynamodb.BatchWriteItemInput]) rivo.Stream[rivo.Item[*awsdynamodb.BatchWriteItemOutput]] {
 		out := make(chan rivo.Item[*awsdynamodb.BatchWriteItemOutput])
 
 		go func() {
@@ -75,17 +77,7 @@ func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeli
 				go func() {
 					defer wg.Done()
 					for i := range rivo.OrDone(ctx, in) {
-						if i.Err != nil {
-							select {
-							case <-ctx.Done():
-								out <- rivo.Item[*awsdynamodb.BatchWriteItemOutput]{Err: ctx.Err()}
-								return
-							case out <- rivo.Item[*awsdynamodb.BatchWriteItemOutput]{Err: i.Err}:
-								continue
-							}
-						}
-
-						res, err := batchWriteItem(ctx, client, i.Val, 0)
+						res, err := batchWriteItem(ctx, client, i, 0)
 						if err != nil {
 							select {
 							case <-ctx.Done():
@@ -114,16 +106,12 @@ func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeli
 }
 
 // BatchPutItems returns a pipeline which writes the input stream to the provided DynamoDB using the BatchWriteItem API, but only for PutItem operations;
-func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWriteOption) rivo.Pipeline[types.PutRequest, *awsdynamodb.BatchWriteItemOutput] {
+func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWriteOption) rivo.Pipeline[types.PutRequest, rivo.Item[*awsdynamodb.BatchWriteItemOutput]] {
 	batchedItems := rivo.Batch[types.PutRequest](25)
 
-	batchWriteRequests := rivo.Map[[]types.PutRequest, *awsdynamodb.BatchWriteItemInput](func(ctx context.Context, i rivo.Item[[]types.PutRequest]) (*awsdynamodb.BatchWriteItemInput, error) {
-		if i.Err != nil {
-			return nil, i.Err
-		}
-
-		writeRequests := make([]types.WriteRequest, 0, len(i.Val))
-		for _, putRequest := range i.Val {
+	batchWriteRequests := rivo.Map[[]types.PutRequest, *awsdynamodb.BatchWriteItemInput](func(ctx context.Context, r []types.PutRequest) *awsdynamodb.BatchWriteItemInput {
+		writeRequests := make([]types.WriteRequest, 0, len(r))
+		for _, putRequest := range r {
 			writeRequests = append(writeRequests, types.WriteRequest{PutRequest: &putRequest})
 		}
 
@@ -131,7 +119,7 @@ func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWri
 			RequestItems: map[string][]types.WriteRequest{
 				tableName: writeRequests,
 			},
-		}, nil
+		}
 	})
 
 	return rivo.Pipe3(batchedItems, batchWriteRequests, BatchWrite(client, opt...))

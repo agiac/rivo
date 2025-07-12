@@ -21,11 +21,7 @@ func TestFromReader(t *testing.T) {
 
 			var rows [][]string
 			for item := range s {
-				if item.Err != nil {
-					assert.Fail(t, "unexpected error", item.Err)
-					return
-				}
-
+				assert.NoError(t, item.Err)
 				rows = append(rows, item.Val)
 			}
 
