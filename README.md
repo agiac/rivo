@@ -236,6 +236,7 @@ batcher := rivo.Batch(10, rivo.BatchMaxWait(100*time.Millisecond))
 - `OrDone`: utility function that propagates context cancellation to streams
 - `FilterMapValues`: extracts only successful values from Item streams
 - `FilterMapErrors`: extracts only errors from Item streams
+- `Merge`: merges multiple streams into a single stream
 
 ## Error handling
 
@@ -270,7 +271,7 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
   - [ ] SQL-like operators (join, group by, etc.)
   - [ ] More AWS integrations
 - [ ] Add more utilities:
-  - [ ] Merge (combine multiple streams)
+  - [x] Merge (combine multiple streams)
   - [ ] Zip (combine streams element-wise)
   - [ ] Take/Skip operators
 - [ ] Performance optimizations and benchmarking
