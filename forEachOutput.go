@@ -14,7 +14,7 @@ import (
 func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), opt ...ForEachOutputOption) Pipeline[T, U] {
 	o := mustForEachOutputOptions(opt)
 
-	return func(ctx context.Context, in Stream[T]) Stream[U] {
+	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[U] {
 		out := make(chan U, o.bufferSize)
 
 		go func() {

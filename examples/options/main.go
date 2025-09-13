@@ -22,7 +22,7 @@ func main() {
 
 	p := rivo.Pipe(rivo.Pipeline[rivo.None, int](in), double)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)

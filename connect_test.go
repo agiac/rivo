@@ -37,7 +37,7 @@ func ExampleConnect() {
 	p1 := Pipe(capitalize, a)
 	p2 := Pipe(lowercase, b)
 
-	<-Pipe(g, Connect(p1, p2))(ctx, nil)
+	<-Pipe(g, Connect(p1, p2))(ctx, nil, nil)
 
 	for _, s := range resA {
 		fmt.Println(s)
@@ -78,7 +78,7 @@ func TestParallel(t *testing.T) {
 			mu2.Unlock()
 		})
 
-		<-Pipe(g, Connect(a, b))(ctx, nil)
+		<-Pipe(g, Connect(a, b))(ctx, nil, nil)
 
 		want := []string{"Hello", "Hello", "Hello"}
 
@@ -113,7 +113,7 @@ func TestParallel(t *testing.T) {
 			resB = append(resB, i)
 		})
 
-		<-Connect(a, b)(ctx, g(ctx, nil))
+		<-Connect(a, b)(ctx, g(ctx, nil, nil), nil)
 
 		mtxA.Lock()
 		mtxB.Lock()

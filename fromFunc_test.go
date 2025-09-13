@@ -27,7 +27,7 @@ func ExampleFromFunc() {
 
 	in := FromFunc(genFn)
 
-	s := in(ctx, nil)
+	s := in(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -55,7 +55,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn)
 
-		got := Collect(f(ctx, nil))
+		got := Collect(f(ctx, nil, nil))
 
 		want := []int{1, 2, 3, 4, 5}
 
@@ -77,7 +77,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn)
 
-		got := Collect(f(ctx, nil))
+		got := Collect(f(ctx, nil, nil))
 
 		assert.Less(t, len(got), 5, "should not generate more than 5 items when context is cancelled")
 	})
@@ -95,7 +95,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn, FromFuncBufferSize(3))
 
-		out := f(ctx, nil)
+		out := f(ctx, nil, nil)
 
 		got := Collect(out)
 
@@ -118,7 +118,7 @@ func TestFromFunc(t *testing.T) {
 
 		f := FromFunc(genFn, FromFuncPoolSize(3))
 
-		got := Collect(f(ctx, nil))
+		got := Collect(f(ctx, nil, nil))
 
 		want := []int{1, 2, 3, 4, 5}
 
@@ -142,7 +142,7 @@ func TestFromFunc(t *testing.T) {
 			beforeCloseCalled.Store(true)
 		}))
 
-		got := Collect(f(ctx, nil))
+		got := Collect(f(ctx, nil, nil))
 
 		want := []int{1, 2, 3, 4, 5}
 

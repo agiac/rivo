@@ -10,8 +10,8 @@ func Pipe[A, B, C any](a Pipeline[A, B], b Pipeline[B, C]) Pipeline[A, C] {
 
 // Pipe2 pipes two pipelines together.
 func Pipe2[A, B, C any](a Pipeline[A, B], b Pipeline[B, C]) Pipeline[A, C] {
-	return func(ctx context.Context, stream Stream[A]) Stream[C] {
-		return b(context.WithoutCancel(ctx), a(ctx, stream))
+	return func(ctx context.Context, stream Stream[A], errs chan<- error) Stream[C] {
+		return b(context.WithoutCancel(ctx), a(ctx, stream, errs), errs)
 	}
 }
 

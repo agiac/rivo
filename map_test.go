@@ -20,7 +20,7 @@ func ExampleMap() {
 
 	p := Pipe(in, double)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)
@@ -46,7 +46,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 
@@ -66,7 +66,7 @@ func TestMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 6)
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -89,7 +89,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, MapBufferSize(3))
 
-		out := m(ctx, in)
+		out := m(ctx, in, nil)
 
 		got := Collect(out)
 
@@ -110,7 +110,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, MapPoolSize(3))
 
-		got := Collect(Pipe(in, m)(ctx, nil))
+		got := Collect(Pipe(in, m)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 

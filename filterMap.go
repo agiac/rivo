@@ -27,24 +27,6 @@ func FilterMap[T, U any](f func(context.Context, T) (bool, U), opt ...FilterMapO
 	)
 }
 
-func FilterMapValues[T any]() Pipeline[Item[T], T] {
-	return FilterMap[Item[T], T](func(_ context.Context, item Item[T]) (bool, T) {
-		if item.Err != nil {
-			return false, item.Val
-		}
-		return true, item.Val
-	})
-}
-
-func FilterMapErrors[T any]() Pipeline[Item[T], error] {
-	return FilterMap[Item[T], error](func(_ context.Context, item Item[T]) (bool, error) {
-		if item.Err != nil {
-			return true, item.Err
-		}
-		return false, nil
-	})
-}
-
 type filterMapOptions struct {
 	poolSize   int
 	bufferSize int

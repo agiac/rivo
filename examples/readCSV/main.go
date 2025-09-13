@@ -24,8 +24,8 @@ func main() {
 
 	readCSV := rivocsv.FromReader(r)
 
-	filterDates := rivo.Filter[rivo.Item[[]string]](func(ctx context.Context, i rivo.Item[[]string]) bool {
-		date, err := time.Parse("2006-01-02", i.Val[5])
+	filterDates := rivo.Filter[[]string](func(ctx context.Context, v []string) bool {
+		date, err := time.Parse("2006-01-02", v[5])
 		if err != nil {
 			return false
 		}
@@ -33,13 +33,13 @@ func main() {
 		return date.After(time.Date(2023, 1, 20, 0, 0, 0, 0, time.UTC))
 	})
 
-	logValues := rivo.Do[rivo.Item[[]string]](func(ctx context.Context, i rivo.Item[[]string]) {
-		log.Println(i.Val)
+	logValues := rivo.Do[[]string](func(ctx context.Context, i []string) {
+		log.Println(i)
 	})
 
 	<-rivo.Pipe3(
 		readCSV,
 		filterDates,
 		logValues,
-	)(ctx, nil)
+	)(ctx, nil, nil)
 }

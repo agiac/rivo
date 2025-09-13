@@ -6,6 +6,8 @@
 
 **NOTE: THIS LIBRARY IS STILL IN ACTIVE DEVELOPMENT AND IS NOT YET PRODUCTION READY.**
 
+TODO: update for new Pipeline function signature
+
 ## About
 
 `rivo` has two major inspirations:

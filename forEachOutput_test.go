@@ -20,7 +20,7 @@ func ExampleForEachOutput() {
 
 	p := Pipe(in, ForEachOutput(f))
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)
@@ -46,7 +46,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, fo)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 
@@ -66,7 +66,7 @@ func TestForEachOutput(t *testing.T) {
 		g := Of(1, 2, 3, 4, 6)
 		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, fo)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -89,7 +89,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f, ForEachOutputBufferSize(3))
 
-		out := fo(ctx, in)
+		out := fo(ctx, in, nil)
 
 		got := Collect(out)
 
@@ -110,7 +110,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f, ForEachOutputPoolSize(3))
 
-		got := Collect(Pipe(in, fo)(ctx, nil))
+		got := Collect(Pipe(in, fo)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 

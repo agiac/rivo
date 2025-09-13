@@ -14,6 +14,8 @@ import (
 func (s *Suite) TestBatchPutItems() {
 	ctx := context.Background()
 
+	errs := make(chan error, 1)
+
 	in := make(chan types.PutRequest)
 	go func() {
 		defer close(in)
@@ -27,9 +29,14 @@ func (s *Suite) TestBatchPutItems() {
 		}
 	}()
 
-	out := rivodynamodb.BatchPutItems(s.db, writeTableName, rivodynamodb.BatchWritePoolSize(runtime.NumCPU()), rivodynamodb.BatchWriteChanSize(1))(ctx, in)
+	out := rivodynamodb.BatchPutItems(s.db, writeTableName, rivodynamodb.BatchWritePoolSize(runtime.NumCPU()), rivodynamodb.BatchWriteChanSize(1))(ctx, in, errs)
 	for o := range out {
-		s.NoError(o.Err)
+		s.NotNil(o)
+	}
+
+	close(errs)
+	for err := range errs {
+		s.NoError(err)
 	}
 
 	for i := range tableItems {

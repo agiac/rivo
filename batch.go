@@ -12,7 +12,7 @@ import (
 func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
 	o := assertBatchOptions(opt)
 
-	return func(ctx context.Context, in Stream[T]) Stream[[]T] {
+	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[[]T] {
 		out := make(chan []T, o.bufferSize)
 
 		go func() {

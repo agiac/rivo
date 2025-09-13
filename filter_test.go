@@ -20,7 +20,7 @@ func ExampleFilter() {
 
 	p := Pipe(in, even)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -42,7 +42,7 @@ func TestFilter(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		f := Filter(even)
 
-		got := Collect(Pipe(g, f)(ctx, nil))
+		got := Collect(Pipe(g, f)(ctx, nil, nil))
 		want := []int{2, 4}
 
 		assert.Equal(t, want, got)
@@ -55,7 +55,7 @@ func TestFilter(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		f := Filter(even)
 
-		got := Collect(f(ctx, g(ctx, nil)))
+		got := Collect(f(ctx, g(ctx, nil, nil), nil))
 
 		assert.Lessf(t, len(got), 5, "expected less than 5 items, got %d", len(got))
 	})
@@ -66,7 +66,7 @@ func TestFilter(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		f := Filter(even, FilterBufferSize(3))
 
-		got := Collect(f(ctx, g(ctx, nil)))
+		got := Collect(f(ctx, g(ctx, nil, nil), nil))
 		want := []int{2, 4}
 
 		assert.Equal(t, want, got)
@@ -78,7 +78,7 @@ func TestFilter(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		f := Filter(even, FilterPoolSize(3))
 
-		got := Collect(Pipe(g, f)(ctx, nil))
+		got := Collect(Pipe(g, f)(ctx, nil, nil))
 		want := []int{2, 4}
 
 		assert.ElementsMatch(t, want, got)

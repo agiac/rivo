@@ -16,12 +16,8 @@ func TestFromReader(t *testing.T) {
 		g := FromReader(strings.NewReader("Hello World"))
 
 		var got string
-		for item := range g(ctx, nil) {
-			if item.Err != nil {
-				assert.Fail(t, "unexpected error", item.Err)
-				return
-			}
-			got += string(item.Val)
+		for item := range g(ctx, nil, nil) {
+			got += string(item)
 		}
 
 		assert.Equal(t, "Hello World", got)
@@ -34,12 +30,8 @@ func TestFromReader(t *testing.T) {
 		g := FromReader(strings.NewReader(s))
 
 		var got string
-		for item := range g(ctx, nil) {
-			if item.Err != nil {
-				assert.Fail(t, "unexpected error", item.Err)
-				return
-			}
-			got += string(item.Val)
+		for item := range g(ctx, nil, nil) {
+			got += string(item)
 		}
 
 		assert.Equal(t, s, got)

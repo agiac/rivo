@@ -21,7 +21,7 @@ func TestToWriter(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		write := ToWriter(w)
 
-		Collect(Pipe(in, write)(ctx, nil))
+		Collect(Pipe(in, write)(ctx, nil, nil))
 
 		assert.Equal(t, "hello world", buf.String())
 	})

@@ -31,7 +31,7 @@ func main() {
 	// By passing a context and an input channel to our pipeline, we can get the output stream.
 	// Since our first pipeline `in` is a generator and does not depend on an input stream, we can pass a nil channel.
 	// Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
-	<-p(ctx, nil)
+	<-p(ctx, nil, nil)
 
 	// Expected output:
 	// 2

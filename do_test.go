@@ -19,7 +19,7 @@ func ExampleDo() {
 		fmt.Println(i)
 	})
 
-	<-Pipe(g, d)(ctx, nil)
+	<-Pipe(g, d)(ctx, nil, nil)
 
 	// Output:
 	// 1
@@ -43,7 +43,7 @@ func TestDo(t *testing.T) {
 
 		p := Pipe(g, d)
 
-		<-p(ctx, nil)
+		<-p(ctx, nil, nil)
 
 		assert.Equal(t, 5, count)
 	})
@@ -62,7 +62,7 @@ func TestDo(t *testing.T) {
 
 		p := Pipe(g, d)
 
-		<-p(ctx, nil)
+		<-p(ctx, nil, nil)
 
 		assert.Lessf(t, count, 5, "count should be less than 5 when context is cancelled")
 	})
@@ -80,7 +80,7 @@ func TestDo(t *testing.T) {
 
 		p := Pipe(g, d)
 
-		<-p(ctx, nil)
+		<-p(ctx, nil, nil)
 
 		assert.Equal(t, int32(5), count.Load())
 	})
@@ -102,7 +102,7 @@ func TestDo(t *testing.T) {
 
 		p := Pipe(g, d)
 
-		<-p(ctx, nil)
+		<-p(ctx, nil, nil)
 
 		assert.Equal(t, int32(5), count.Load())
 		assert.True(t, onBeforeCloseCalled)

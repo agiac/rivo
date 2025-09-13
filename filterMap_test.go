@@ -24,7 +24,7 @@ func ExampleFilterMap() {
 
 	p := Pipe(in, filterMapEvenAndMultiply)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -49,7 +49,7 @@ func TestFilterMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		fm := FilterMap(filterMapFunc)
 
-		got := Collect(Pipe(g, fm)(ctx, nil))
+		got := Collect(Pipe(g, fm)(ctx, nil, nil))
 		want := []string{"even-2", "even-4"}
 
 		assert.Equal(t, want, got)
@@ -62,7 +62,7 @@ func TestFilterMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		fm := FilterMap(filterMapFunc)
 
-		got := Collect(fm(ctx, g(ctx, nil)))
+		got := Collect(fm(ctx, g(ctx, nil, nil), nil))
 
 		assert.Lessf(t, len(got), 5, "expected less than 5 items, got %d", len(got))
 	})
@@ -73,7 +73,7 @@ func TestFilterMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		fm := FilterMap(filterMapFunc, FilterMapBufferSize(3))
 
-		got := Collect(fm(ctx, g(ctx, nil)))
+		got := Collect(fm(ctx, g(ctx, nil, nil), nil))
 		want := []string{"even-2", "even-4"}
 
 		assert.Equal(t, want, got)
@@ -85,136 +85,9 @@ func TestFilterMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 5)
 		fm := FilterMap(filterMapFunc, FilterMapPoolSize(3))
 
-		got := Collect(Pipe(g, fm)(ctx, nil))
+		got := Collect(Pipe(g, fm)(ctx, nil, nil))
 		want := []string{"even-2", "even-4"}
 
 		assert.ElementsMatch(t, want, got) // Order might not be guaranteed with pool size > 1
-	})
-}
-
-func TestFilterMapValues(t *testing.T) {
-	t.Run("filters out errors", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Val: 1},
-			Item[int]{Err: fmt.Errorf("error 1")},
-			Item[int]{Val: 3},
-			Item[int]{Err: fmt.Errorf("error 2")},
-			Item[int]{Val: 5},
-		)
-
-		fmv := FilterMapValues[int]()
-		p := Pipe(in, fmv)
-		got := Collect(p(ctx, nil))
-		want := []int{1, 3, 5}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("empty input", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of[Item[int]]()
-
-		fmv := FilterMapValues[int]()
-		p := Pipe(in, fmv)
-		got := Collect(p(ctx, nil))
-		want := []int(nil)
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("all errors", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Err: fmt.Errorf("error 1")},
-			Item[int]{Err: fmt.Errorf("error 2")},
-		)
-
-		fmv := FilterMapValues[int]()
-		p := Pipe(in, fmv)
-		got := Collect(p(ctx, nil))
-		want := []int(nil)
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("all values", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Val: 1},
-			Item[int]{Val: 2},
-		)
-
-		fmv := FilterMapValues[int]()
-		p := Pipe(in, fmv)
-		got := Collect(p(ctx, nil))
-		want := []int{1, 2}
-
-		assert.Equal(t, want, got)
-	})
-}
-
-func TestFilterMapErrors(t *testing.T) {
-	err1 := fmt.Errorf("error 1")
-	err2 := fmt.Errorf("error 2")
-
-	t.Run("filters out values", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Val: 1},
-			Item[int]{Err: err1},
-			Item[int]{Val: 3},
-			Item[int]{Err: err2},
-			Item[int]{Val: 5},
-		)
-
-		fme := FilterMapErrors[int]()
-		p := Pipe(in, fme)
-		got := Collect(p(ctx, nil))
-		want := []error{err1, err2}
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("empty input", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of[Item[int]]()
-
-		fme := FilterMapErrors[int]()
-		p := Pipe(in, fme)
-		got := Collect(p(ctx, nil))
-		want := []error(nil)
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("all values", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Val: 1},
-			Item[int]{Val: 2},
-		)
-
-		fme := FilterMapErrors[int]()
-		p := Pipe(in, fme)
-		got := Collect(p(ctx, nil))
-		want := []error(nil)
-
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("all errors", func(t *testing.T) {
-		ctx := context.Background()
-		in := Of(
-			Item[int]{Err: err1},
-			Item[int]{Err: err2},
-		)
-
-		fme := FilterMapErrors[int]()
-		p := Pipe(in, fme)
-		got := Collect(p(ctx, nil))
-		want := []error{err1, err2}
-
-		assert.Equal(t, want, got)
 	})
 }

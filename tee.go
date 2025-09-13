@@ -47,11 +47,11 @@ func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 func Tee[T any](ctx context.Context, in Stream[T]) (Generator[T], Generator[T]) {
 	streams := TeeStreamN(ctx, in, 2)
 
-	gen1 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+	gen1 := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
 		return streams[0]
 	}
 
-	gen2 := func(ctx context.Context, _ Stream[None]) Stream[T] {
+	gen2 := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
 		return streams[1]
 	}
 
@@ -68,7 +68,7 @@ func TeeN[T any](ctx context.Context, in Stream[T], n int) []Generator[T] {
 	generators := make([]Generator[T], n)
 
 	for i := 0; i < n; i++ {
-		generators[i] = func(ctx context.Context, _ Stream[None]) Stream[T] {
+		generators[i] = func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
 			return streams[i]
 		}
 	}

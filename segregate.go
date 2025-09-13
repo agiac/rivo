@@ -29,11 +29,11 @@ func SegregateStream[T any](ctx context.Context, in Stream[T], predicate func(T)
 func Segregate[T any](ctx context.Context, in Stream[T], predicate func(T) bool) (Generator[T], Generator[T]) {
 	trueStream, falseStream := SegregateStream(ctx, in, predicate)
 
-	trueGen := func(ctx context.Context, _ Stream[None]) Stream[T] {
+	trueGen := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
 		return trueStream
 	}
 
-	falseGen := func(ctx context.Context, _ Stream[None]) Stream[T] {
+	falseGen := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
 		return falseStream
 	}
 
