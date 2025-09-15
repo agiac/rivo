@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+// TODO: errs chan in func
+
 // ForEachOutput returns a pipeline that applies a function to each item from the input stream.
 // The function can write directly to the output channel. The output channel should not be closed by the function,
 // since the output stream will be closed when the input stream is closed or the context is done.

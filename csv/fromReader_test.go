@@ -3,6 +3,7 @@ package csv_test
 import (
 	"context"
 	"encoding/csv"
+	"github.com/agiac/rivo"
 	"strings"
 	"testing"
 
@@ -32,26 +33,28 @@ func TestFromReader(t *testing.T) {
 		})
 
 		t.Run("with errors", func(t *testing.T) {
-			t.Skip() // TODO: fix error handling
-
 			ctx := context.Background()
+
+			errs := make(chan error, 1)
 
 			r := csv.NewReader(strings.NewReader("1,2,3\n4,5,6\nerror\n7,8,9\n"))
 
-			s := FromReader(r)(ctx, nil, nil)
+			s := FromReader(r)(ctx, nil, errs)
 
 			var result [][]string
-			var errs []error
 			for item := range s {
 				result = append(result, item)
 			}
+
+			close(errs)
+			errVals := rivo.Collect(errs)
 
 			assert.Equal(t, [][]string{
 				{"1", "2", "3"},
 				{"4", "5", "6"},
 				{"7", "8", "9"},
 			}, result)
-			assert.Error(t, errs[0])
+			assert.Error(t, errVals[0])
 		})
 
 		t.Run("csv reader options", func(t *testing.T) {
