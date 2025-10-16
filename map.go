@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// TODO: return error from f and send to errs channel
+
 // Map returns a pipeline that applies a function to each item from the input stream.
 func Map[T, U any](f func(context.Context, T) U, opt ...MapOption) Pipeline[T, U] {
 	o := mustMapOptions(opt)
