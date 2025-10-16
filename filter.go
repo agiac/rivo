@@ -10,7 +10,7 @@ func Filter[T any](f func(context.Context, T) bool, opt ...FilterOption) Pipelin
 	o := assertFilterOptions(opt)
 
 	return ForEachOutput[T, T](
-		func(ctx context.Context, val T, out chan<- T) {
+		func(ctx context.Context, val T, out chan<- T, errs chan<- error) {
 			if f(ctx, val) {
 				select {
 				case <-ctx.Done():

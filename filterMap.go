@@ -10,7 +10,7 @@ func FilterMap[T, U any](f func(context.Context, T) (bool, U), opt ...FilterMapO
 	o := assertFilterMapOptions(opt)
 
 	return ForEachOutput[T, U](
-		func(ctx context.Context, val T, out chan<- U) {
+		func(ctx context.Context, val T, out chan<- U, errs chan<- error) {
 			keep, mapped := f(ctx, val)
 			if !keep {
 				return

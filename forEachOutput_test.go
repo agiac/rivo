@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ func ExampleForEachOutput() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	f := func(ctx context.Context, n int, out chan<- int) {
+	f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 		out <- n * 2
 	}
 
@@ -38,7 +39,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("for each output all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -56,7 +57,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -74,7 +75,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -102,7 +103,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 

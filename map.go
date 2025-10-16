@@ -10,7 +10,7 @@ func Map[T, U any](f func(context.Context, T) U, opt ...MapOption) Pipeline[T, U
 	o := mustMapOptions(opt)
 
 	return ForEachOutput[T, U](
-		func(ctx context.Context, val T, out chan<- U) {
+		func(ctx context.Context, val T, out chan<- U, errs chan<- error) {
 			v := f(ctx, val)
 
 			select {

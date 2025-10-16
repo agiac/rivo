@@ -11,7 +11,7 @@ func Do[T any](f func(context.Context, T), opt ...DoOption) Sync[T] {
 	o := assertDoOptions(opt)
 
 	return Sync[T](ForEachOutput[T, None](
-		func(ctx context.Context, val T, out chan<- None) {
+		func(ctx context.Context, val T, out chan<- None, errs chan<- error) {
 			f(ctx, val)
 		},
 		ForEachOutputPoolSize(o.poolSize),

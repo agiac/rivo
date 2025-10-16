@@ -3,6 +3,7 @@ package csv
 import (
 	"context"
 	"encoding/csv"
+
 	"github.com/agiac/rivo"
 )
 
@@ -10,7 +11,7 @@ import (
 // csv.Writer are passed to the output stream.
 func ToWriter(w *csv.Writer) rivo.Pipeline[[]string, error] {
 	return rivo.ForEachOutput(
-		func(ctx context.Context, val []string, out chan<- error) {
+		func(ctx context.Context, val []string, out chan<- error, errs chan<- error) {
 			if err := w.Write(val); err != nil {
 				select {
 				case <-ctx.Done():
