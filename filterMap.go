@@ -6,12 +6,21 @@ import (
 )
 
 // FilterMap returns a pipeline that filters and maps items from the input stream.
-func FilterMap[T, U any](f func(context.Context, T) (bool, U), opt ...FilterMapOption) Pipeline[T, U] {
+func FilterMap[T, U any](f func(context.Context, T) (bool, U, error), opt ...FilterMapOption) Pipeline[T, U] {
 	o := assertFilterMapOptions(opt)
 
 	return ForEachOutput[T, U](
 		func(ctx context.Context, val T, out chan<- U, errs chan<- error) {
-			keep, mapped := f(ctx, val)
+			keep, mapped, err := f(ctx, val)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case errs <- err:
+				}
+				return
+			}
+
 			if !keep {
 				return
 			}

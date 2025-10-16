@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,11 +16,11 @@ func ExampleFilterMap() {
 	in := Of(1, 2, 3, 4, 5)
 
 	// Filter even numbers and multiply by 10
-	filterMapEvenAndMultiply := FilterMap(func(ctx context.Context, n int) (bool, int) {
+	filterMapEvenAndMultiply := FilterMap(func(ctx context.Context, n int) (bool, int, error) {
 		if n%2 == 0 {
-			return true, n * 10
+			return true, n * 10, nil
 		}
-		return false, 0
+		return false, 0, nil
 	})
 
 	p := Pipe(in, filterMapEvenAndMultiply)
@@ -36,11 +37,11 @@ func ExampleFilterMap() {
 }
 
 func TestFilterMap(t *testing.T) {
-	filterMapFunc := func(ctx context.Context, i int) (bool, string) {
+	filterMapFunc := func(ctx context.Context, i int) (bool, string, error) {
 		if i%2 == 0 {
-			return true, fmt.Sprintf("even-%d", i)
+			return true, fmt.Sprintf("even-%d", i), nil
 		}
-		return false, ""
+		return false, "", nil
 	}
 
 	t.Run("filter and map items", func(t *testing.T) {

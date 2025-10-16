@@ -29,3 +29,28 @@ func Pipe4[A, B, C, D, E any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, 
 func Pipe5[A, B, C, D, E, F any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F]) Pipeline[A, F] {
 	return Pipe4(Pipe2(a, b), c, d, e)
 }
+
+// Pipe6 pipes six pipelines together.
+func Pipe6[A, B, C, D, E, F, G any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F], f Pipeline[F, G]) Pipeline[A, G] {
+	return Pipe5(Pipe2(a, b), c, d, e, f)
+}
+
+// Pipe7 pipes seven pipelines together.
+func Pipe7[A, B, C, D, E, F, G, H any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F], f Pipeline[F, G], g Pipeline[G, H]) Pipeline[A, H] {
+	return Pipe6(Pipe2(a, b), c, d, e, f, g)
+}
+
+// Pipe8 pipes eight pipelines together.
+func Pipe8[A, B, C, D, E, F, G, H, I any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F], f Pipeline[F, G], g Pipeline[G, H], h Pipeline[H, I]) Pipeline[A, I] {
+	return Pipe7(Pipe2(a, b), c, d, e, f, g, h)
+}
+
+// Pipe9 pipes nine pipelines together.
+func Pipe9[A, B, C, D, E, F, G, H, I, J any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F], f Pipeline[F, G], g Pipeline[G, H], h Pipeline[H, I], i Pipeline[I, J]) Pipeline[A, J] {
+	return Pipe8(Pipe2(a, b), c, d, e, f, g, h, i)
+}
+
+// Pipe10 pipes ten pipelines together.
+func Pipe10[A, B, C, D, E, F, G, H, I, J, K any](a Pipeline[A, B], b Pipeline[B, C], c Pipeline[C, D], d Pipeline[D, E], e Pipeline[E, F], f Pipeline[F, G], g Pipeline[G, H], h Pipeline[H, I], i Pipeline[I, J], j Pipeline[J, K]) Pipeline[A, K] {
+	return Pipe9(Pipe2(a, b), c, d, e, f, g, h, i, j)
+}
