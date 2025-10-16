@@ -5,15 +5,21 @@ import (
 	"fmt"
 )
 
-// TODO: return error from f and send to errs channel
-
 // Map returns a pipeline that applies a function to each item from the input stream.
-func Map[T, U any](f func(context.Context, T) U, opt ...MapOption) Pipeline[T, U] {
+func Map[T, U any](f func(context.Context, T) (U, error), opt ...MapOption) Pipeline[T, U] {
 	o := mustMapOptions(opt)
 
 	return ForEachOutput[T, U](
 		func(ctx context.Context, val T, out chan<- U, errs chan<- error) {
-			v := f(ctx, val)
+			v, err := f(ctx, val)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case errs <- err:
+				}
+				return
+			}
 
 			select {
 			case <-ctx.Done():

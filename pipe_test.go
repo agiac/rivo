@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,8 +15,8 @@ func ExamplePipe() {
 
 	a := Of(1, 2, 3, 4, 5)
 
-	p := Pipe(a, Map(func(ctx context.Context, n int) int {
-		return n + 1
+	p := Pipe(a, Map(func(ctx context.Context, n int) (int, error) {
+		return n + 1, nil
 	}))
 
 	s := p(ctx, nil, nil)
@@ -33,8 +34,8 @@ func ExamplePipe() {
 }
 
 func TestPipes(t *testing.T) {
-	var addOne = Map(func(ctx context.Context, n int) int {
-		return n + 1
+	var addOne = Map(func(ctx context.Context, n int) (int, error) {
+		return n + 1, nil
 	})
 
 	t.Run("pipe", func(t *testing.T) {

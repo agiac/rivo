@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,8 +15,8 @@ func ExampleMap() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	double := Map(func(ctx context.Context, n int) int {
-		return n * 2
+	double := Map(func(ctx context.Context, n int) (int, error) {
+		return n * 2, nil
 	})
 
 	p := Pipe(in, double)
@@ -38,8 +39,8 @@ func TestMap(t *testing.T) {
 	t.Run("map all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		g := Of(1, 2, 3, 4, 5)
@@ -56,8 +57,8 @@ func TestMap(t *testing.T) {
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		ctx, cancel := context.WithCancel(ctx)
@@ -74,8 +75,8 @@ func TestMap(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		in := make(chan int)
@@ -102,8 +103,8 @@ func TestMap(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		in := Of(1, 2, 3, 4, 5)

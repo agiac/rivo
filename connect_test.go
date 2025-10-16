@@ -3,10 +3,11 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"strings"
 	"sync"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,12 +17,12 @@ func ExampleConnect() {
 
 	g := Of("Hello", "Hello", "Hello")
 
-	capitalize := Map(func(ctx context.Context, i string) string {
-		return strings.ToUpper(i)
+	capitalize := Map(func(ctx context.Context, i string) (string, error) {
+		return strings.ToUpper(i), nil
 	})
 
-	lowercase := Map(func(ctx context.Context, i string) string {
-		return strings.ToLower(i)
+	lowercase := Map(func(ctx context.Context, i string) (string, error) {
+		return strings.ToLower(i), nil
 	})
 
 	resA := make([]string, 0)

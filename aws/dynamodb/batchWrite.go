@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/agiac/rivo"
 	"sync"
 	"time"
+
+	"github.com/agiac/rivo"
 
 	awsdynamodb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -107,7 +108,7 @@ func BatchWrite(client *awsdynamodb.Client, opt ...BatchWriteOption) rivo.Pipeli
 func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWriteOption) rivo.Pipeline[types.PutRequest, *awsdynamodb.BatchWriteItemOutput] {
 	batchedItems := rivo.Batch[types.PutRequest](25)
 
-	batchWriteRequests := rivo.Map[[]types.PutRequest, *awsdynamodb.BatchWriteItemInput](func(ctx context.Context, r []types.PutRequest) *awsdynamodb.BatchWriteItemInput {
+	batchWriteRequests := rivo.Map[[]types.PutRequest, *awsdynamodb.BatchWriteItemInput](func(ctx context.Context, r []types.PutRequest) (*awsdynamodb.BatchWriteItemInput, error) {
 		writeRequests := make([]types.WriteRequest, 0, len(r))
 		for _, putRequest := range r {
 			writeRequests = append(writeRequests, types.WriteRequest{PutRequest: &putRequest})
@@ -117,7 +118,7 @@ func BatchPutItems(client *awsdynamodb.Client, tableName string, opt ...BatchWri
 			RequestItems: map[string][]types.WriteRequest{
 				tableName: writeRequests,
 			},
-		}
+		}, nil
 	})
 
 	return rivo.Pipe3(batchedItems, batchWriteRequests, BatchWrite(client, opt...))

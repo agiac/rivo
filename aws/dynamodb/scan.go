@@ -3,8 +3,9 @@ package dynamodb
 import (
 	"context"
 	"fmt"
-	"github.com/agiac/rivo"
 	"sync"
+
+	"github.com/agiac/rivo"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -107,13 +108,13 @@ func Scan(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption)
 func ScanItems(client *dynamodb.Client, input *dynamodb.ScanInput, opt ...ScanOption) rivo.Pipeline[rivo.None, map[string]types.AttributeValue] {
 	tableScan := Scan(client, input, opt...)
 
-	itemsMap := rivo.Map[*dynamodb.ScanOutput, []map[string]types.AttributeValue](func(ctx context.Context, i *dynamodb.ScanOutput) []map[string]types.AttributeValue {
+	itemsMap := rivo.Map[*dynamodb.ScanOutput, []map[string]types.AttributeValue](func(ctx context.Context, i *dynamodb.ScanOutput) ([]map[string]types.AttributeValue, error) {
 		items := make([]map[string]types.AttributeValue, 0, len(i.Items))
 		for _, item := range i.Items {
 			items = append(items, item)
 		}
 
-		return items
+		return items, nil
 	})
 
 	return rivo.Pipe3(tableScan, itemsMap, rivo.Flatten[map[string]types.AttributeValue]())
