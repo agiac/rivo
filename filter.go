@@ -6,12 +6,22 @@ import (
 )
 
 // Filter returns a pipeline that filters the input stream using the given function.
-func Filter[T any](f func(context.Context, T) bool, opt ...FilterOption) Pipeline[T, T] {
+func Filter[T any](f func(context.Context, T) (bool, error), opt ...FilterOption) Pipeline[T, T] {
 	o := assertFilterOptions(opt)
 
 	return ForEachOutput[T, T](
 		func(ctx context.Context, val T, out chan<- T, errs chan<- error) {
-			if f(ctx, val) {
+			ok, err := f(ctx, val)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case errs <- err:
+				}
+				return
+			}
+
+			if ok {
 				select {
 				case <-ctx.Done():
 					return

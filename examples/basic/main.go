@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/agiac/rivo"
 )
 
@@ -16,8 +17,8 @@ func main() {
 	in := rivo.Of(1, 2, 3, 4, 5)
 
 	// `Filter` returns a pipeline that filters the input stream using the given function.
-	onlyEven := rivo.Filter(func(ctx context.Context, n int) bool {
-		return n%2 == 0
+	onlyEven := rivo.Filter(func(ctx context.Context, n int) (bool, error) {
+		return n%2 == 0, nil
 	})
 
 	// `Do` returns a pipeline that applies the given function to each item in the input stream, without emitting any values.

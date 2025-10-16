@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,8 +15,8 @@ func ExampleFilter() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	even := Filter(func(ctx context.Context, n int) bool {
-		return n%2 == 0
+	even := Filter(func(ctx context.Context, n int) (bool, error) {
+		return n%2 == 0, nil
 	})
 
 	p := Pipe(in, even)
@@ -32,8 +33,8 @@ func ExampleFilter() {
 }
 
 func TestFilter(t *testing.T) {
-	even := func(ctx context.Context, i int) bool {
-		return i%2 == 0
+	even := func(ctx context.Context, i int) (bool, error) {
+		return i%2 == 0, nil
 	}
 
 	t.Run("filter all items", func(t *testing.T) {
