@@ -3,9 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"sync/atomic"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,14 +16,14 @@ func ExampleFromFunc() {
 
 	count := atomic.Int32{}
 
-	genFn := func(ctx context.Context, errs chan<- error) (int32, bool, bool) {
+	genFn := func(ctx context.Context) (int32, bool, error) {
 		value := count.Add(1)
 
 		if value > 5 {
-			return 0, false, false
+			return 0, false, nil
 		}
 
-		return value, false, true
+		return value, true, nil
 	}
 
 	in := FromFunc(genFn)
@@ -45,12 +46,12 @@ func TestFromFunc(t *testing.T) {
 	t.Run("generate items from function", func(t *testing.T) {
 		ctx := context.Background()
 		count := 0
-		genFn := func(ctx context.Context, errs chan<- error) (int, bool, bool) {
+		genFn := func(ctx context.Context) (int, bool, error) {
 			count++
 			if count > 5 {
-				return 0, false, false
+				return 0, false, nil
 			}
-			return count, false, true
+			return count, true, nil
 		}
 
 		f := FromFunc(genFn)
@@ -67,12 +68,12 @@ func TestFromFunc(t *testing.T) {
 		cancel()
 
 		count := 0
-		genFn := func(ctx context.Context, errs chan<- error) (int, bool, bool) {
+		genFn := func(ctx context.Context) (int, bool, error) {
 			count++
 			if count > 5 {
-				return 0, false, false
+				return 0, false, nil
 			}
-			return count, false, true
+			return count, true, nil
 		}
 
 		f := FromFunc(genFn)
@@ -85,12 +86,12 @@ func TestFromFunc(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 		count := 0
-		genFn := func(ctx context.Context, errs chan<- error) (int, bool, bool) {
+		genFn := func(ctx context.Context) (int, bool, error) {
 			count++
 			if count > 5 {
-				return 0, false, false
+				return 0, false, nil
 			}
-			return count, false, true
+			return count, true, nil
 		}
 
 		f := FromFunc(genFn, FromFuncBufferSize(3))
@@ -108,12 +109,12 @@ func TestFromFunc(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 		count := atomic.Int32{}
-		genFn := func(ctx context.Context, errs chan<- error) (int, bool, bool) {
+		genFn := func(ctx context.Context) (int, bool, error) {
 			v := int(count.Add(1))
 			if v > 5 {
-				return 0, false, false
+				return 0, false, nil
 			}
-			return v, false, true
+			return v, true, nil
 		}
 
 		f := FromFunc(genFn, FromFuncPoolSize(3))
@@ -128,12 +129,12 @@ func TestFromFunc(t *testing.T) {
 	t.Run("with on before close", func(t *testing.T) {
 		ctx := context.Background()
 		var n int
-		genFn := func(ctx context.Context, errs chan<- error) (int, bool, bool) {
+		genFn := func(ctx context.Context) (int, bool, error) {
 			n++
 			if n > 5 {
-				return 0, false, false
+				return 0, false, nil
 			}
-			return n, false, true
+			return n, true, nil
 		}
 
 		beforeCloseCalled := atomic.Bool{}
