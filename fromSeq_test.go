@@ -16,7 +16,7 @@ func ExampleFromSeq() {
 	seq := slices.Values([]int{1, 2, 3, 4, 5})
 	in := FromSeq(seq)
 
-	s := in(ctx, nil)
+	s := in(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -37,7 +37,7 @@ func TestFromSeq(t *testing.T) {
 		seq := slices.Values([]int{1, 2, 3, 4, 5})
 		p := FromSeq(seq)
 
-		got := Collect(p(ctx, nil))
+		got := Collect(p(ctx, nil, nil))
 
 		want := []int{1, 2, 3, 4, 5}
 
@@ -52,7 +52,7 @@ func ExampleFromSeq2() {
 
 	in := FromSeq2(seq)
 
-	s := in(ctx, nil)
+	s := in(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Printf("%d, %s\n", item.Val1, item.Val2)
@@ -74,7 +74,7 @@ func TestFromSeq2(t *testing.T) {
 
 		p := FromSeq2(seq)
 
-		got := Collect(p(ctx, nil))
+		got := Collect(p(ctx, nil, nil))
 
 		want := []FromSeq2Value[int, string]{
 			{Val1: 0, Val2: "a"},

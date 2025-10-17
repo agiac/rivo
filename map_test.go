@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,13 +15,13 @@ func ExampleMap() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	double := Map(func(ctx context.Context, n int) int {
-		return n * 2
+	double := Map(func(ctx context.Context, n int) (int, error) {
+		return n * 2, nil
 	})
 
 	p := Pipe(in, double)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)
@@ -38,15 +39,15 @@ func TestMap(t *testing.T) {
 	t.Run("map all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		g := Of(1, 2, 3, 4, 5)
 
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 
@@ -56,8 +57,8 @@ func TestMap(t *testing.T) {
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		ctx, cancel := context.WithCancel(ctx)
@@ -66,7 +67,7 @@ func TestMap(t *testing.T) {
 		g := Of(1, 2, 3, 4, 6)
 		m := Map(mapFn)
 
-		got := Collect(Pipe(g, m)(ctx, nil))
+		got := Collect(Pipe(g, m)(ctx, nil, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -74,8 +75,8 @@ func TestMap(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		in := make(chan int)
@@ -89,7 +90,7 @@ func TestMap(t *testing.T) {
 
 		m := Map(mapFn, MapBufferSize(3))
 
-		out := m(ctx, in)
+		out := m(ctx, in, nil)
 
 		got := Collect(out)
 
@@ -102,15 +103,15 @@ func TestMap(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		mapFn := func(ctx context.Context, n int) int {
-			return n + 1
+		mapFn := func(ctx context.Context, n int) (int, error) {
+			return n + 1, nil
 		}
 
 		in := Of(1, 2, 3, 4, 5)
 
 		m := Map(mapFn, MapPoolSize(3))
 
-		got := Collect(Pipe(in, m)(ctx, nil))
+		got := Collect(Pipe(in, m)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 

@@ -6,7 +6,7 @@ import (
 )
 
 func Connect[T any](pp ...Sync[T]) Sync[T] {
-	return func(ctx context.Context, in Stream[T]) Stream[None] {
+	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[None] {
 		out := make(chan None)
 
 		go func() {
@@ -20,7 +20,7 @@ func Connect[T any](pp ...Sync[T]) Sync[T] {
 			for i, p := range pp {
 				go func(i int, p Sync[T]) {
 					defer wg.Done()
-					<-p(ctx, inS[i])
+					<-p(ctx, inS[i], errs)
 				}(i, p)
 			}
 

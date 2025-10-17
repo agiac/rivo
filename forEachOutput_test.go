@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,13 +15,13 @@ func ExampleForEachOutput() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	f := func(ctx context.Context, n int, out chan<- int) {
+	f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 		out <- n * 2
 	}
 
 	p := Pipe(in, ForEachOutput(f))
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)
@@ -38,7 +39,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("for each output all items", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -46,7 +47,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, fo)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 
@@ -56,7 +57,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with context cancelled", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -66,7 +67,7 @@ func TestForEachOutput(t *testing.T) {
 		g := Of(1, 2, 3, 4, 6)
 		fo := ForEachOutput(f)
 
-		got := Collect(Pipe(g, fo)(ctx, nil))
+		got := Collect(Pipe(g, fo)(ctx, nil, nil))
 
 		assert.Lessf(t, len(got), 3, "expected less than 3 items due to context cancellation")
 	})
@@ -74,7 +75,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with buffer size", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -89,7 +90,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f, ForEachOutputBufferSize(3))
 
-		out := fo(ctx, in)
+		out := fo(ctx, in, nil)
 
 		got := Collect(out)
 
@@ -102,7 +103,7 @@ func TestForEachOutput(t *testing.T) {
 	t.Run("with pool size", func(t *testing.T) {
 		ctx := context.Background()
 
-		f := func(ctx context.Context, n int, out chan<- int) {
+		f := func(ctx context.Context, n int, out chan<- int, errs chan<- error) {
 			out <- n + 1
 		}
 
@@ -110,7 +111,7 @@ func TestForEachOutput(t *testing.T) {
 
 		fo := ForEachOutput(f, ForEachOutputPoolSize(3))
 
-		got := Collect(Pipe(in, fo)(ctx, nil))
+		got := Collect(Pipe(in, fo)(ctx, nil, nil))
 
 		want := []int{2, 3, 4, 5, 6}
 

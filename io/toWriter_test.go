@@ -17,7 +17,7 @@ func TestToWriter(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	Collect(Pipe(in, ToWriter(&buf))(ctx, nil))
+	Collect(Pipe(in, ToWriter(&buf))(ctx, nil, nil))
 
 	assert.Equal(t, "hello world", buf.String())
 }

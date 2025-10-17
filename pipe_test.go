@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -14,11 +15,11 @@ func ExamplePipe() {
 
 	a := Of(1, 2, 3, 4, 5)
 
-	p := Pipe(a, Map(func(ctx context.Context, n int) int {
-		return n + 1
+	p := Pipe(a, Map(func(ctx context.Context, n int) (int, error) {
+		return n + 1, nil
 	}))
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -33,8 +34,8 @@ func ExamplePipe() {
 }
 
 func TestPipes(t *testing.T) {
-	var addOne = Map(func(ctx context.Context, n int) int {
-		return n + 1
+	var addOne = Map(func(ctx context.Context, n int) (int, error) {
+		return n + 1, nil
 	})
 
 	t.Run("pipe", func(t *testing.T) {
@@ -45,7 +46,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe(a, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			want := []int{2, 3, 4, 5, 6}
 
@@ -60,7 +61,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe(a, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 		})
@@ -74,7 +75,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe2(a, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			want := []int{
 				2, 3, 4, 5, 6}
@@ -90,7 +91,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe2(a, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 		})
@@ -104,7 +105,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe3(a, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			want := []int{
 				3, 4, 5, 6, 7}
@@ -120,7 +121,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe3(a, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 		})
@@ -134,7 +135,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe4(a, addOne, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			want := []int{
 				4, 5, 6, 7, 8}
@@ -150,7 +151,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe4(a, addOne, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 		})
@@ -164,7 +165,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe5(a, addOne, addOne, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			want := []int{
 				5, 6, 7, 8, 9}
@@ -180,7 +181,7 @@ func TestPipes(t *testing.T) {
 
 			p := Pipe5(a, addOne, addOne, addOne, addOne)
 
-			got := Collect(p(ctx, nil))
+			got := Collect(p(ctx, nil, nil))
 
 			assert.Lessf(t, len(got), 5, "should not collect all items when context is cancelled, got: %v", got)
 		})

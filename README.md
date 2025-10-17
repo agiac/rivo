@@ -37,11 +37,11 @@ and a more intuitive API and developer experience (Rx is very powerful, but can 
 type Stream[T any] <-chan T
 ```
 
-`Pipeline` is a function that takes a `context.Context` and a `Stream` of one type and returns a `Stream` of the same or a different type.
+`Pipeline` is a function that takes a `context.Context`, a `Stream` of one type, and an error channel, then returns a `Stream` of the same or a different type.
 They represent the operations that can be performed on streams. Pipelines can be composed together to create more complex operations.
 
 ```go
-type Pipeline[T, U any] func(ctx context.Context, stream Stream[T]) Stream[U]
+type Pipeline[T, U any] func(ctx context.Context, stream Stream[T], errs chan<- error) Stream[U]
 ```
 
 For convenience, `rivo` also provides type aliases for common pipeline patterns:
@@ -77,6 +77,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/agiac/rivo"
 )
 
@@ -87,11 +88,11 @@ func main() {
 	in := rivo.Of(1, 2, 3, 4, 5)
 
 	// `Filter` returns a pipeline that filters the input stream using the given function
-	onlyEven := rivo.Filter(func(ctx context.Context, n int) bool {
-		return n%2 == 0
+	onlyEven := rivo.Filter(func(ctx context.Context, n int) (bool, error) {
+		return n%2 == 0, nil
 	})
 
-    // `Do` returns a pipeline that applies the given function to each item in the input stream without emitting any values
+	// `Do` returns a pipeline that applies the given function to each item in the input stream without emitting any values
 	log := rivo.Do(func(ctx context.Context, n int) {
 		fmt.Println(n)
 	})
@@ -99,10 +100,11 @@ func main() {
 	// `Pipe` composes pipelines together, returning a new pipeline
 	p := rivo.Pipe3(in, onlyEven, log)
 
-	// By passing a context and an input channel to our pipeline, we can get the output stream.
+	// By passing a context, an input channel, and an error channel to our pipeline, we can get the output stream.
 	// Since our first pipeline `in` is a generator and does not depend on an input stream, we can pass a nil channel.
 	// Also, since `log` is a sink, we only have to read once from the output channel to know that the pipeline has finished.
-	<-p(ctx, nil)
+	// The third parameter is an error channel, which we can also set to nil if we don't have to handle errors.
+	<-p(ctx, nil, nil)
 
 	// Expected output:
 	// 2
@@ -119,8 +121,13 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
+
 	"github.com/agiac/rivo"
 )
+
+// This example demonstrates simple error handling in a pipeline.
+// We create a stream of strings, convert them to integers, and log any conversion errors.
 
 func main() {
 	ctx := context.Background()
@@ -129,27 +136,30 @@ func main() {
 	g := rivo.Of("1", "2", "invalid", "4", "5")
 
 	// Transform string to Item[int] with error handling
-	toInt := rivo.Map(func(ctx context.Context, s string) rivo.Item[int] {
-		n, err := strconv.Atoi(s)
-		if err != nil {
-			return rivo.Item[int]{Err: err} // Return an item with the error
-		}
-		return rivo.Item[int]{Val: n} // Return an item with the value
+	toInt := rivo.Map(func(ctx context.Context, s string) (int, error) {
+		return strconv.Atoi(s)
 	})
 
-	// Process the items, handling both values and errors
-	handleResults := rivo.Do(func(ctx context.Context, i rivo.Item[int]) {
-		if i.Err != nil {
-			fmt.Printf("ERROR: %v\n", i.Err)
-		} else {
-			fmt.Printf("Value: %d\n", i.Val)
+	handleValues := rivo.Do[int](func(ctx context.Context, i int) {
+		fmt.Println("Value:", i)
+	})
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	errs := make(chan error, 1)
+	defer close(errs)
+
+	wg.Go(func() {
+		for err := range errs {
+			fmt.Println("ERROR:", err)
 		}
 	})
 
-	p := rivo.Pipe3(g, toInt, handleResults)
-	<-p(ctx, nil)
-	
-	// Output:
+	p := rivo.Pipe3(g, toInt, handleValues)
+
+	<-p(ctx, nil, errs)
+
 	// Value: 1
 	// Value: 2
 	// ERROR: strconv.Atoi: parsing "invalid": invalid syntax
@@ -234,6 +244,7 @@ batcher := rivo.Batch(10, rivo.BatchMaxWait(100*time.Millisecond))
 - `OrDone`: utility function that propagates context cancellation to streams
 - `FilterMapValues`: extracts only successful values from Item streams
 - `FilterMapErrors`: extracts only errors from Item streams
+- `Merge`: merges multiple streams into a single stream
 
 ## Error handling
 
@@ -268,7 +279,7 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
   - [ ] SQL-like operators (join, group by, etc.)
   - [ ] More AWS integrations
 - [ ] Add more utilities:
-  - [ ] Merge (combine multiple streams)
+  - [x] Merge (combine multiple streams)
   - [ ] Zip (combine streams element-wise)
   - [ ] Take/Skip operators
 - [ ] Performance optimizations and benchmarking

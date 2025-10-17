@@ -20,14 +20,14 @@ func TestFromScanner(t *testing.T) {
 
 		g := FromScanner(scanner)
 
-		got := Collect(g(ctx, nil))
+		got := Collect(g(ctx, nil, nil))
 
-		want := []Item[[]byte]{
-			{Val: []byte("1")},
-			{Val: []byte("2")},
-			{Val: []byte("3")},
-			{Val: []byte("4")},
-			{Val: []byte("5")},
+		want := [][]byte{
+			[]byte("1"),
+			[]byte("2"),
+			[]byte("3"),
+			[]byte("4"),
+			[]byte("5"),
 		}
 
 		assert.Equal(t, want, got)
@@ -42,11 +42,11 @@ func TestFromScanner(t *testing.T) {
 
 		g := FromScanner(scanner)
 
-		got := Collect(g(ctx, nil))
+		got := Collect(g(ctx, nil, nil))
 
-		want := make([]Item[[]byte], 1000)
+		want := make([][]byte, 1000)
 		for i := range want {
-			want[i] = Item[[]byte]{Val: []byte("Hello World")}
+			want[i] = []byte("Hello World")
 		}
 
 		assert.Equal(t, want, got)

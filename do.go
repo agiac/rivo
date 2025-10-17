@@ -11,37 +11,12 @@ func Do[T any](f func(context.Context, T), opt ...DoOption) Sync[T] {
 	o := assertDoOptions(opt)
 
 	return Sync[T](ForEachOutput[T, None](
-		func(ctx context.Context, val T, out chan<- None) {
+		func(ctx context.Context, val T, out chan<- None, errs chan<- error) {
 			f(ctx, val)
 		},
 		ForEachOutputPoolSize(o.poolSize),
 		ForEachOutputOnBeforeClose(o.onBeforeClose),
 	))
-
-	//return func(ctx context.Context, in Stream[T]) Stream[None] {
-	//	out := make(chan None)
-	//
-	//	go func() {
-	//		defer close(out)
-	//
-	//		wg := sync.WaitGroup{}
-	//		wg.Add(o.poolSize)
-	//
-	//		for i := 0; i < o.poolSize; i++ {
-	//			go func() {
-	//				defer wg.Done()
-	//
-	//				for item := range OrDone(ctx, in) {
-	//					f(ctx, item)
-	//				}
-	//			}()
-	//		}
-	//
-	//		wg.Wait()
-	//	}()
-	//
-	//	return out
-	//}
 }
 
 type doOptions struct {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/agiac/rivo"
 )
 
@@ -13,8 +14,8 @@ func main() {
 
 	in := rivo.Of(1, 2, 3, 4, 5)
 
-	doubleFn := func(ctx context.Context, n int) int {
-		return n * 2
+	doubleFn := func(ctx context.Context, n int) (int, error) {
+		return n * 2, nil
 	}
 
 	// `Pass additional options to the pipeline
@@ -22,7 +23,7 @@ func main() {
 
 	p := rivo.Pipe(rivo.Pipeline[rivo.None, int](in), double)
 
-	s := p(ctx, nil)
+	s := p(ctx, nil, nil)
 
 	for n := range s {
 		fmt.Println(n)

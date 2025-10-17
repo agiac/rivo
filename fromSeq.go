@@ -6,7 +6,7 @@ import (
 )
 
 func FromSeq[T any](seq iter.Seq[T]) Generator[T] {
-	return func(ctx context.Context, in Stream[None]) Stream[T] {
+	return func(ctx context.Context, in Stream[None], errs chan<- error) Stream[T] {
 		out := make(chan T)
 
 		go func() {
@@ -31,7 +31,7 @@ type FromSeq2Value[T, U any] struct {
 }
 
 func FromSeq2[T, U any](seq iter.Seq2[T, U]) Generator[FromSeq2Value[T, U]] {
-	return func(ctx context.Context, in Stream[None]) Stream[FromSeq2Value[T, U]] {
+	return func(ctx context.Context, in Stream[None], errs chan<- error) Stream[FromSeq2Value[T, U]] {
 		out := make(chan FromSeq2Value[T, U])
 
 		go func() {

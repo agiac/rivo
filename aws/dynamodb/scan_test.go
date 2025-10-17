@@ -14,14 +14,20 @@ import (
 func (s *Suite) TestScanTable() {
 	ctx := context.Background()
 
+	errs := make(chan error, 1)
+
 	out := rivodynamodb.Scan(s.db, &dynamodb.ScanInput{
 		TableName: aws.String(scanTableName),
-	}, rivodynamodb.ScanPoolSize(runtime.NumCPU()))(ctx, nil)
+	}, rivodynamodb.ScanPoolSize(runtime.NumCPU()))(ctx, nil, errs)
 
 	var got []map[string]types.AttributeValue
 	for o := range out {
-		s.NoError(o.Err)
-		got = append(got, o.Val.Items...)
+		got = append(got, o.Items...)
+	}
+
+	close(errs)
+	for err := range errs {
+		s.NoError(err)
 	}
 
 	s.Len(got, tableItems)
@@ -36,14 +42,20 @@ func (s *Suite) TestScanTable() {
 func (s *Suite) TestScanTableItems() {
 	ctx := context.Background()
 
+	errs := make(chan error, 1)
+
 	out := rivodynamodb.ScanItems(s.db, &dynamodb.ScanInput{
 		TableName: aws.String(scanTableName),
-	}, rivodynamodb.ScanPoolSize(runtime.NumCPU()))(ctx, nil)
+	}, rivodynamodb.ScanPoolSize(runtime.NumCPU()))(ctx, nil, errs)
 
 	var got []map[string]types.AttributeValue
 	for o := range out {
-		s.NoError(o.Err)
-		got = append(got, o.Val)
+		got = append(got, o)
+	}
+
+	close(errs)
+	for err := range errs {
+		s.NoError(err)
 	}
 
 	s.Len(got, tableItems)

@@ -11,10 +11,10 @@ import (
 // The function can write directly to the output channel. The output channel should not be closed by the function,
 // since the output stream will be closed when the input stream is closed or the context is done.
 // ForEachOutput panics if invalid options are provided.
-func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), opt ...ForEachOutputOption) Pipeline[T, U] {
+func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U, errs chan<- error), opt ...ForEachOutputOption) Pipeline[T, U] {
 	o := mustForEachOutputOptions(opt)
 
-	return func(ctx context.Context, in Stream[T]) Stream[U] {
+	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[U] {
 		out := make(chan U, o.bufferSize)
 
 		go func() {
@@ -37,7 +37,7 @@ func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U), o
 								return
 							}
 
-							f(ctx, v, out)
+							f(ctx, v, out, errs)
 						}
 					}
 				}()

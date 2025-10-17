@@ -14,7 +14,7 @@ func ExampleOf() {
 
 	in := Of(1, 2, 3, 4, 5)
 
-	s := in(ctx, nil)
+	s := in(ctx, nil, nil)
 
 	for item := range s {
 		fmt.Println(item)
@@ -34,7 +34,7 @@ func TestOf(t *testing.T) {
 
 		p := Of(1, 2, 3, 4, 5)
 
-		got := Collect(p(ctx, nil))
+		got := Collect(p(ctx, nil, nil))
 
 		want := []int{1, 2, 3, 4, 5}
 
@@ -45,7 +45,7 @@ func TestOf(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		in := Of(1, 2, 3, 4, 5)(ctx, nil)
+		in := Of(1, 2, 3, 4, 5)(ctx, nil, nil)
 
 		got := Collect(in)
 

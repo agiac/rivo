@@ -19,7 +19,7 @@ func ExampleBatch() {
 
 	p := Pipe(in, b)
 
-	for item := range p(ctx, nil) {
+	for item := range p(ctx, nil, nil) {
 		fmt.Printf("%v\n", item)
 	}
 
@@ -37,7 +37,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](2)
 
-		got := Collect(Pipe(in, b)(ctx, nil))
+		got := Collect(Pipe(in, b)(ctx, nil, nil))
 
 		want := [][]int{
 			{1, 2},
@@ -64,7 +64,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](10, BatchMaxWait(100*time.Millisecond))
 
-		got := Collect(b(ctx, in))
+		got := Collect(b(ctx, in, nil))
 
 		want := [][]int{{1}, {2}, {3}}
 
@@ -78,7 +78,7 @@ func TestBatch(t *testing.T) {
 		in := Of(1, 2, 3, 4, 5)
 		b := Batch[int](2)
 
-		got := Collect(Pipe(in, b)(ctx, nil))
+		got := Collect(Pipe(in, b)(ctx, nil, nil))
 
 		assert.Lessf(t, len(got), 2, "should not batch items when context is cancelled")
 	})
@@ -90,7 +90,7 @@ func TestBatch(t *testing.T) {
 
 		b := Batch[int](2, BatchBufferSize(3))
 
-		out := Pipe(in, b)(ctx, nil)
+		out := Pipe(in, b)(ctx, nil, nil)
 
 		got := Collect(out)
 

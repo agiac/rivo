@@ -3,10 +3,11 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"strings"
 	"sync"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,12 +17,12 @@ func ExampleConnect() {
 
 	g := Of("Hello", "Hello", "Hello")
 
-	capitalize := Map(func(ctx context.Context, i string) string {
-		return strings.ToUpper(i)
+	capitalize := Map(func(ctx context.Context, i string) (string, error) {
+		return strings.ToUpper(i), nil
 	})
 
-	lowercase := Map(func(ctx context.Context, i string) string {
-		return strings.ToLower(i)
+	lowercase := Map(func(ctx context.Context, i string) (string, error) {
+		return strings.ToLower(i), nil
 	})
 
 	resA := make([]string, 0)
@@ -37,7 +38,7 @@ func ExampleConnect() {
 	p1 := Pipe(capitalize, a)
 	p2 := Pipe(lowercase, b)
 
-	<-Pipe(g, Connect(p1, p2))(ctx, nil)
+	<-Pipe(g, Connect(p1, p2))(ctx, nil, nil)
 
 	for _, s := range resA {
 		fmt.Println(s)
@@ -78,7 +79,7 @@ func TestParallel(t *testing.T) {
 			mu2.Unlock()
 		})
 
-		<-Pipe(g, Connect(a, b))(ctx, nil)
+		<-Pipe(g, Connect(a, b))(ctx, nil, nil)
 
 		want := []string{"Hello", "Hello", "Hello"}
 
@@ -113,7 +114,7 @@ func TestParallel(t *testing.T) {
 			resB = append(resB, i)
 		})
 
-		<-Connect(a, b)(ctx, g(ctx, nil))
+		<-Connect(a, b)(ctx, g(ctx, nil, nil), nil)
 
 		mtxA.Lock()
 		mtxB.Lock()

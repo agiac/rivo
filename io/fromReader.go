@@ -9,9 +9,9 @@ import (
 // TODO: consider using ForEachOutput function
 
 // FromReader returns a pipeline that reads from an io.Reader.
-func FromReader(r io.Reader) rivo.Pipeline[rivo.None, rivo.Item[[]byte]] {
-	return func(ctx context.Context, _ rivo.Stream[rivo.None]) rivo.Stream[rivo.Item[[]byte]] {
-		out := make(chan rivo.Item[[]byte])
+func FromReader(r io.Reader) rivo.Pipeline[rivo.None, []byte] {
+	return func(ctx context.Context, _ rivo.Stream[rivo.None], errs chan<- error) rivo.Stream[[]byte] {
+		out := make(chan []byte)
 
 		go func() {
 			defer close(out)
@@ -24,7 +24,10 @@ func FromReader(r io.Reader) rivo.Pipeline[rivo.None, rivo.Item[[]byte]] {
 					if err == io.EOF {
 						return
 					}
-					out <- rivo.Item[[]byte]{Err: err}
+					select {
+					case <-ctx.Done():
+					case errs <- err:
+					}
 					continue
 				}
 
@@ -33,9 +36,8 @@ func FromReader(r io.Reader) rivo.Pipeline[rivo.None, rivo.Item[[]byte]] {
 
 				select {
 				case <-ctx.Done():
-					out <- rivo.Item[[]byte]{Err: ctx.Err()}
 					return
-				case out <- rivo.Item[[]byte]{Val: val}:
+				case out <- val:
 				}
 			}
 		}()

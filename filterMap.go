@@ -6,12 +6,21 @@ import (
 )
 
 // FilterMap returns a pipeline that filters and maps items from the input stream.
-func FilterMap[T, U any](f func(context.Context, T) (bool, U), opt ...FilterMapOption) Pipeline[T, U] {
+func FilterMap[T, U any](f func(context.Context, T) (bool, U, error), opt ...FilterMapOption) Pipeline[T, U] {
 	o := assertFilterMapOptions(opt)
 
 	return ForEachOutput[T, U](
-		func(ctx context.Context, val T, out chan<- U) {
-			keep, mapped := f(ctx, val)
+		func(ctx context.Context, val T, out chan<- U, errs chan<- error) {
+			keep, mapped, err := f(ctx, val)
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case errs <- err:
+				}
+				return
+			}
+
 			if !keep {
 				return
 			}
@@ -25,24 +34,6 @@ func FilterMap[T, U any](f func(context.Context, T) (bool, U), opt ...FilterMapO
 		ForEachOutputPoolSize(o.poolSize),
 		ForEachOutputBufferSize(o.bufferSize),
 	)
-}
-
-func FilterMapValues[T any]() Pipeline[Item[T], T] {
-	return FilterMap[Item[T], T](func(_ context.Context, item Item[T]) (bool, T) {
-		if item.Err != nil {
-			return false, item.Val
-		}
-		return true, item.Val
-	})
-}
-
-func FilterMapErrors[T any]() Pipeline[Item[T], error] {
-	return FilterMap[Item[T], error](func(_ context.Context, item Item[T]) (bool, error) {
-		if item.Err != nil {
-			return true, item.Err
-		}
-		return false, nil
-	})
 }
 
 type filterMapOptions struct {
