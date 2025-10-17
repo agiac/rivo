@@ -209,13 +209,6 @@ Besides these, the library's subdirectories contain more specialized pipeline fa
 - `FromReader`: returns a generator pipeline that reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a sink pipeline that writes the input stream to the provided `csv.Writer`;
 
-### Package `rivo/aws/dynamodb`
-
-- `Scan`: returns a generator pipeline that scans the provided DynamoDB table and emits the scan output responses;
-- `ScanItems`: returns a generator pipeline that scans the provided DynamoDB table and emits the items from the scan output responses;
-- `BatchWrite`: returns a transformer pipeline that writes the input stream to the provided DynamoDB table using the BatchWriteItem API;
-- `BatchPutItems`: returns a transformer pipeline that writes the input stream to the provided DynamoDB table using the BatchWriteItem API, but only for PutItem operations;
-
 ## Configuration Options
 
 Many pipelines support configuration options to customize their behavior:
@@ -277,7 +270,6 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
   - [ ] Tap (side effects without modifying the stream)
   - [ ] Time-based operators (throttle, debounce, etc.)
   - [ ] SQL-like operators (join, group by, etc.)
-  - [ ] More AWS integrations
 - [ ] Add more utilities:
   - [x] Merge (combine multiple streams)
   - [ ] Zip (combine streams element-wise)
