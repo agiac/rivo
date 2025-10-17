@@ -32,7 +32,6 @@ func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U, er
 						select {
 						case <-ctx.Done():
 							return
-							// TODO: timeout?
 						case v, ok := <-in:
 							if !ok {
 								return
