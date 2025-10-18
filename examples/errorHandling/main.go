@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 
 	"github.com/agiac/rivo"
 )
@@ -23,21 +22,19 @@ func main() {
 		return strconv.Atoi(s)
 	})
 
+	// Handle successful integer values
 	handleValues := rivo.Do[int](func(ctx context.Context, i int) {
 		fmt.Println("Value:", i)
 	})
 
-	var wg sync.WaitGroup
-	defer wg.Wait()
+	// Handle errors
+	handleErrors := func(ctx context.Context, err error) {
+		fmt.Println("ERROR:", err)
+	}
 
-	errs := make(chan error, 1)
-	defer close(errs)
-
-	wg.Go(func() {
-		for err := range errs {
-			fmt.Println("ERROR:", err)
-		}
-	})
+	// Run the error handler in a separate goroutine
+	errs, wait := rivo.RunErrorSyncFunc(ctx, handleErrors)
+	defer wait()
 
 	p := rivo.Pipe3(g, toInt, handleValues)
 
