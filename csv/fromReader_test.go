@@ -76,5 +76,24 @@ func TestFromReader(t *testing.T) {
 				{"7", "8", "9"},
 			}, rows)
 		})
+
+		t.Run("discard header", func(t *testing.T) {
+			ctx := context.Background()
+
+			r := csv.NewReader(strings.NewReader("header1,header2,header3\n1,2,3\n4,5,6\n7,8,9\n"))
+
+			s := FromReader(r, DiscardHeader())(ctx, nil, nil)
+
+			var rows [][]string
+			for item := range s {
+				rows = append(rows, item)
+			}
+
+			assert.Equal(t, [][]string{
+				{"1", "2", "3"},
+				{"4", "5", "6"},
+				{"7", "8", "9"},
+			}, rows)
+		})
 	})
 }
