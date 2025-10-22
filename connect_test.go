@@ -26,13 +26,15 @@ func ExampleConnect() {
 	})
 
 	resA := make([]string, 0)
-	a := Do(func(ctx context.Context, i string) {
+	a := Do(func(ctx context.Context, i string) error {
 		resA = append(resA, i)
+		return nil
 	})
 
 	resB := make([]string, 0)
-	b := Do(func(ctx context.Context, i string) {
+	b := Do(func(ctx context.Context, i string) error {
 		resB = append(resB, i)
+		return nil
 	})
 
 	p1 := Pipe(capitalize, a)
@@ -65,18 +67,20 @@ func TestParallel(t *testing.T) {
 
 		mu1 := sync.Mutex{}
 		resA := make([]string, 0)
-		a := Do(func(ctx context.Context, i string) {
+		a := Do(func(ctx context.Context, i string) error {
 			mu1.Lock()
 			resA = append(resA, i)
 			mu1.Unlock()
+			return nil
 		})
 
 		mu2 := sync.Mutex{}
 		resB := make([]string, 0)
-		b := Do(func(ctx context.Context, i string) {
+		b := Do(func(ctx context.Context, i string) error {
 			mu2.Lock()
 			resB = append(resB, i)
 			mu2.Unlock()
+			return nil
 		})
 
 		<-Pipe(g, Connect(a, b))(ctx, nil, nil)
@@ -100,18 +104,20 @@ func TestParallel(t *testing.T) {
 
 		mtxA := sync.Mutex{}
 		resA := make([]string, 0)
-		a := Do(func(ctx context.Context, i string) {
+		a := Do(func(ctx context.Context, i string) error {
 			mtxA.Lock()
 			defer mtxA.Unlock()
 			resA = append(resA, i)
+			return nil
 		})
 
 		mtxB := sync.Mutex{}
 		resB := make([]string, 0)
-		b := Do(func(ctx context.Context, i string) {
+		b := Do(func(ctx context.Context, i string) error {
 			mtxB.Lock()
 			defer mtxB.Unlock()
 			resB = append(resB, i)
+			return nil
 		})
 
 		<-Connect(a, b)(ctx, g(ctx, nil, nil), nil)

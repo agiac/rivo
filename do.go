@@ -7,16 +7,23 @@ import (
 
 // Do returns a sync pipeline that applies the given function to each item in the stream.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
-func Do[T any](f func(context.Context, T), opt ...DoOption) Sync[T] {
+// If the function returns an error, it will be sent to the error channel.
+func Do[T any](f func(context.Context, T) error, opt ...DoOption) Sync[T] {
 	o := assertDoOptions(opt)
 
-	return Sync[T](ForEachOutput[T, None](
+	return ForEachOutput[T, None](
 		func(ctx context.Context, val T, out chan<- None, errs chan<- error) {
-			f(ctx, val)
+			if err := f(ctx, val); err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case errs <- err:
+				}
+			}
 		},
 		ForEachOutputPoolSize(o.poolSize),
 		ForEachOutputOnBeforeClose(o.onBeforeClose),
-	))
+	)
 }
 
 type doOptions struct {

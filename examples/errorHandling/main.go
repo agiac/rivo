@@ -23,8 +23,9 @@ func main() {
 	})
 
 	// Handle successful integer values
-	handleValues := rivo.Do[int](func(ctx context.Context, i int) {
+	handleValues := rivo.Do[int](func(ctx context.Context, i int) error {
 		fmt.Println("Value:", i)
+		return nil
 	})
 
 	// Handle errors

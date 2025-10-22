@@ -22,8 +22,9 @@ func main() {
 	})
 
 	// `Do` returns a pipeline that applies the given function to each item in the input stream, without emitting any values.
-	log := rivo.Do(func(ctx context.Context, n int) {
+	log := rivo.Do(func(ctx context.Context, n int) error {
 		fmt.Println(n)
+		return nil
 	})
 
 	// `Pipe` composes pipelines together, returning a new pipeline

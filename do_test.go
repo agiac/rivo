@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	. "github.com/agiac/rivo"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -15,8 +16,9 @@ func ExampleDo() {
 
 	g := Of(1, 2, 3, 4, 5)
 
-	d := Do(func(ctx context.Context, i int) {
+	d := Do(func(ctx context.Context, i int) error {
 		fmt.Println(i)
+		return nil
 	})
 
 	<-Pipe(g, d)(ctx, nil, nil)
@@ -36,9 +38,9 @@ func TestDo(t *testing.T) {
 		count := 0
 
 		g := Of(1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i int) {
+		d := Do(func(ctx context.Context, i int) error {
 			count++
+			return nil
 		})
 
 		p := Pipe(g, d)
@@ -55,9 +57,9 @@ func TestDo(t *testing.T) {
 		count := 0
 
 		g := Of(1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i int) {
+		d := Do(func(ctx context.Context, i int) error {
 			count++
+			return nil
 		})
 
 		p := Pipe(g, d)
@@ -71,11 +73,10 @@ func TestDo(t *testing.T) {
 		ctx := context.Background()
 
 		count := atomic.Int32{}
-
 		g := Of[int32](1, 2, 3, 4, 5)
-
-		d := Do(func(ctx context.Context, i int32) {
+		d := Do(func(ctx context.Context, i int32) error {
 			count.Add(1)
+			return nil
 		}, DoPoolSize(3))
 
 		p := Pipe(g, d)
@@ -94,8 +95,9 @@ func TestDo(t *testing.T) {
 
 		onBeforeCloseCalled := false
 
-		d := Do(func(ctx context.Context, i int32) {
+		d := Do(func(ctx context.Context, i int32) error {
 			count.Add(1)
+			return nil
 		}, DoOnBeforeClose(func(ctx context.Context) {
 			onBeforeCloseCalled = true
 		}))
@@ -106,5 +108,41 @@ func TestDo(t *testing.T) {
 
 		assert.Equal(t, int32(5), count.Load())
 		assert.True(t, onBeforeCloseCalled)
+	})
+
+	t.Run("handle errors", func(t *testing.T) {
+		ctx := context.Background()
+
+		count := 0
+
+		g := Of(1, 2, 3, 4, 5)
+		d := Do(func(ctx context.Context, i int) error {
+			if i == 3 {
+				return fmt.Errorf("error on 3")
+			}
+			count++
+			return nil
+		})
+
+		p := Pipe(g, d)
+
+		var mu sync.Mutex
+		var foundErrs []error
+		errs, stop := RunErrorSync(ctx, func(ctx context.Context, errs <-chan error) {
+			for err := range errs {
+				mu.Lock()
+				foundErrs = append(foundErrs, err)
+				mu.Unlock()
+			}
+		})
+		defer stop()
+
+		<-p(ctx, nil, errs)
+
+		assert.Equal(t, 4, count)
+		mu.Lock()
+		assert.Len(t, foundErrs, 1)
+		assert.EqualError(t, foundErrs[0], "error on 3")
+		mu.Unlock()
 	})
 }

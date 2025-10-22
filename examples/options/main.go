@@ -21,7 +21,7 @@ func main() {
 	// `Pass additional options to the pipeline
 	double := rivo.Map(doubleFn, rivo.MapBufferSize(1))
 
-	p := rivo.Pipe(rivo.Pipeline[rivo.None, int](in), double)
+	p := rivo.Pipe(in, double)
 
 	s := p(ctx, nil, nil)
 

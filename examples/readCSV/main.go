@@ -34,8 +34,9 @@ func main() {
 		return date.After(time.Date(2023, 1, 20, 0, 0, 0, 0, time.UTC)), nil
 	})
 
-	logValues := rivo.Do[[]string](func(ctx context.Context, i []string) {
+	logValues := rivo.Do[[]string](func(ctx context.Context, i []string) error {
 		log.Println(i)
+		return nil
 	})
 
 	<-rivo.Pipe3(
