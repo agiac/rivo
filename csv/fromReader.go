@@ -17,7 +17,7 @@ func FromReader(r *csv.Reader) rivo.Pipeline[rivo.None, []string] {
 	return rivo.FromFunc(func(ctx context.Context) ([]string, bool, error) {
 		record, err := r.Read()
 		if errors.Is(err, io.EOF) {
-			return []string{}, false, nil
+			return nil, false, nil
 		}
 
 		return record, true, err

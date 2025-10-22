@@ -19,8 +19,7 @@ func TestToWriter(t *testing.T) {
 	b := bytes.NewBuffer(nil)
 	w := csv.NewWriter(b)
 
-	out := Collect(Pipe(in, ToWriter(w))(ctx, nil, nil))
+	<-Pipe(in, ToWriter(w))(ctx, nil, nil)
 
 	assert.Equal(t, "a,b,c\nd,e,f\ng,h,i\n", b.String())
-	assert.Equal(t, []error(nil), out)
 }

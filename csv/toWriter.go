@@ -7,16 +7,16 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// ToWriter returns a pipeline that writes to a csv.Writer. Only errors from the
-// csv.Writer are passed to the output stream.
-func ToWriter(w *csv.Writer) rivo.Pipeline[[]string, error] {
+// ToWriter returns a pipeline that writes to a csv.Writer. Each input []string is written as a row in the CSV.
+// Any errors encountered during writing are sent to the errs channel.
+func ToWriter(w *csv.Writer) rivo.Pipeline[[]string, rivo.None] {
 	return rivo.ForEachOutput(
-		func(ctx context.Context, val []string, out chan<- error, errs chan<- error) {
+		func(ctx context.Context, val []string, out chan<- rivo.None, errs chan<- error) {
 			if err := w.Write(val); err != nil {
 				select {
 				case <-ctx.Done():
 					return
-				case out <- err:
+				case errs <- err:
 				}
 			}
 		},
