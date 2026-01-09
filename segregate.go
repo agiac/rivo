@@ -4,37 +4,37 @@ import "context"
 
 // TODO: tests
 
-// SegregateStream takes an input stream and a predicate function, and returns two streams:
+// SegregateChan takes an input channel and a predicate function, and returns two channels:
 // one containing items that satisfy the predicate and another containing items that do not.
-func SegregateStream[T any](ctx context.Context, in Stream[T], predicate func(T) bool) (Stream[T], Stream[T]) {
-	trueStream := make(chan T)
-	falseStream := make(chan T)
+func SegregateChan[T any](ctx context.Context, in <-chan T, predicate func(T) bool) (<-chan T, <-chan T) {
+	trueCh := make(chan T)
+	falseCh := make(chan T)
 
 	go func() {
-		defer close(trueStream)
-		defer close(falseStream)
+		defer close(trueCh)
+		defer close(falseCh)
 
 		for item := range OrDone(ctx, in) {
 			if predicate(item) {
-				trueStream <- item
+				trueCh <- item
 			} else {
-				falseStream <- item
+				falseCh <- item
 			}
 		}
 	}()
 
-	return trueStream, falseStream
+	return trueCh, falseCh
 }
 
-func Segregate[T any](ctx context.Context, in Stream[T], predicate func(T) bool) (Generator[T], Generator[T]) {
-	trueStream, falseStream := SegregateStream(ctx, in, predicate)
+func Segregate[T any](ctx context.Context, in <-chan T, predicate func(T) bool) (Generator[T], Generator[T]) {
+	trueCh, falseCh := SegregateChan(ctx, in, predicate)
 
-	trueGen := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
-		return trueStream
+	trueGen := func(ctx context.Context, _ <-chan None, errs chan<- error) <-chan T {
+		return trueCh
 	}
 
-	falseGen := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
-		return falseStream
+	falseGen := func(ctx context.Context, _ <-chan None, errs chan<- error) <-chan T {
+		return falseCh
 	}
 
 	return trueGen, falseGen

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Map returns a worker that applies a function to each item from the input stream.
+// Map returns a worker that applies a function to each item from the input channel.
 func Map[T, U any](f func(context.Context, T) (U, error), opt ...MapOption) Worker[T, U] {
 	o := mustMapOptions(opt)
 

@@ -1,5 +1,7 @@
 # rivo
 
+## TODO: review entire README
+
 [![Go Reference](https://pkg.go.dev/badge/github.com/agiac/rivo.svg)](https://pkg.go.dev/github.com/agiac/rivo)
 
 `rivo` is a library for highly concurrent Go programs that provides type safety through generics and a composable worker architecture.
@@ -29,9 +31,7 @@ and a more intuitive API and developer experience (Rx is very powerful, but can 
 
 ### Basic concepts
 
-`rivo` has several main types, which are the building blocks of the library: `Stream`, `Worker`, `Generator`, `Sync`, and `Item`.
-
-`Stream` represents a data stream. It is a read-only channel of type T.
+`rivo` has several main types, which are the building blocks of the library: `Worker`, `Generator`, `Sync`.
 
 ```go
 type Stream[T any] <-chan T
@@ -41,7 +41,7 @@ type Stream[T any] <-chan T
 They represent the operations that can be performed on streams. Worker can be composed together to create more complex operations.
 
 ```go
-type Worker[T, U any] func(ctx context.Context, stream Stream[T], errs chan<- error) Stream[U]
+type Worker[T, U any] func(ctx context.Context, stream <-chan T, errs chan<- error) Stream[U]
 ```
 
 For convenience, `rivo` also provides type aliases for common worker patterns:

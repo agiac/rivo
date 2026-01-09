@@ -9,7 +9,7 @@ import (
 )
 
 // This example demonstrates simple error handling in a worker.
-// We create a stream of strings, convert them to integers, and log any conversion errors.
+// We create a channel of strings, convert them to integers, and log any conversion errors.
 
 func main() {
 	ctx := context.Background()

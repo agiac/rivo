@@ -3,9 +3,10 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"slices"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +32,7 @@ func ExampleFromSeq() {
 }
 
 func TestFromSeq(t *testing.T) {
-	t.Run("create stream from sequence", func(t *testing.T) {
+	t.Run("create channel from sequence", func(t *testing.T) {
 		ctx := context.Background()
 
 		seq := slices.Values([]int{1, 2, 3, 4, 5})
@@ -67,7 +68,7 @@ func ExampleFromSeq2() {
 }
 
 func TestFromSeq2(t *testing.T) {
-	t.Run("create stream from sequence", func(t *testing.T) {
+	t.Run("create channel from sequence", func(t *testing.T) {
 		ctx := context.Background()
 
 		seq := slices.All([]string{"a", "b", "c", "d", "e"})

@@ -6,13 +6,13 @@ import (
 )
 
 func Connect[T any](pp ...Sync[T]) Sync[T] {
-	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[None] {
+	return func(ctx context.Context, in <-chan T, errs chan<- error) <-chan None {
 		out := make(chan None)
 
 		go func() {
 			defer close(out)
 
-			inS := TeeStreamN(ctx, in, len(pp))
+			inS := TeeN(ctx, in, len(pp))
 
 			wg := sync.WaitGroup{}
 			wg.Add(len(pp))
@@ -32,7 +32,7 @@ func Connect[T any](pp ...Sync[T]) Sync[T] {
 }
 
 func Fanout[T, U any](g Worker[T, U], ss ...Sync[U]) Sync[T] {
-	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[None] {
+	return func(ctx context.Context, in <-chan T, errs chan<- error) <-chan None {
 		return Connect[U](ss...)(ctx, g(ctx, in, errs), errs)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// FilterMap returns a worker that filters and maps items from the input stream.
+// FilterMap returns a worker that filters and maps items from the input channel.
 func FilterMap[T, U any](f func(context.Context, T) (bool, U, error), opt ...FilterMapOption) Worker[T, U] {
 	o := assertFilterMapOptions(opt)
 

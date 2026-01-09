@@ -11,7 +11,7 @@ import (
 
 // FromReader returns a worker that reads from an io.Reader.
 func FromReader(r io.Reader) rivo.Worker[rivo.None, []byte] {
-	return func(ctx context.Context, _ rivo.Stream[rivo.None], errs chan<- error) rivo.Stream[[]byte] {
+	return func(ctx context.Context, _ <-chan rivo.None, errs chan<- error) <-chan []byte {
 		out := make(chan []byte)
 
 		go func() {

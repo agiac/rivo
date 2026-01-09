@@ -3,8 +3,9 @@ package rivo_test
 import (
 	"context"
 	"fmt"
-	. "github.com/agiac/rivo"
 	"testing"
+
+	. "github.com/agiac/rivo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ func ExampleOf() {
 }
 
 func TestOf(t *testing.T) {
-	t.Run("create stream from items", func(t *testing.T) {
+	t.Run("create channel from items", func(t *testing.T) {
 		ctx := context.Background()
 
 		p := Of(1, 2, 3, 4, 5)

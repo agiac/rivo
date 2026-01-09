@@ -7,14 +7,14 @@ import (
 	"sync"
 )
 
-// ForEachOutput returns a worker that applies a function to each item from the input stream.
+// ForEachOutput returns a worker that applies a function to each item from the input channel.
 // The function can write directly to the output channel. The output channel should not be closed by the function,
-// since the output stream will be closed when the input stream is closed or the context is done.
+// since the output channel will be closed when the input channel is closed or the context is done.
 // ForEachOutput panics if invalid options are provided.
 func ForEachOutput[T, U any](f func(ctx context.Context, val T, out chan<- U, errs chan<- error), opt ...ForEachOutputOption) Worker[T, U] {
 	o := mustForEachOutputOptions(opt)
 
-	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[U] {
+	return func(ctx context.Context, in <-chan T, errs chan<- error) <-chan U {
 		out := make(chan U, o.bufferSize)
 
 		go func() {

@@ -4,7 +4,7 @@ import "context"
 
 // Of returns a Generator that emits the given items.
 func Of[T any](items ...T) Generator[T] {
-	return func(ctx context.Context, _ Stream[None], _ chan<- error) Stream[T] {
+	return func(ctx context.Context, _ <-chan None, _ chan<- error) <-chan T {
 		out := make(chan T)
 
 		go func() {

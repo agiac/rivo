@@ -10,8 +10,8 @@ func Pipe[A, B, C any](a Worker[A, B], b Worker[B, C]) Worker[A, C] {
 
 // Pipe2 pipes two workers together.
 func Pipe2[A, B, C any](a Worker[A, B], b Worker[B, C]) Worker[A, C] {
-	return func(ctx context.Context, stream Stream[A], errs chan<- error) Stream[C] {
-		return b(context.WithoutCancel(ctx), a(ctx, stream, errs), errs)
+	return func(ctx context.Context, in <-chan A, errs chan<- error) <-chan C {
+		return b(context.WithoutCancel(ctx), a(ctx, in, errs), errs)
 	}
 }
 

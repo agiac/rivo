@@ -4,14 +4,14 @@ import "context"
 
 // TODO: tests
 
-// TeeStream returns 2 streams that each receive a copy of each item from the input stream.
-func TeeStream[T any](ctx context.Context, in Stream[T]) (Stream[T], Stream[T]) {
-	ss := TeeStreamN(ctx, in, 2)
+// Tee returns 2 channels that each receive a copy of each item from the input channel.
+func Tee[T any](ctx context.Context, in <-chan T) (<-chan T, <-chan T) {
+	ss := TeeN(ctx, in, 2)
 	return ss[0], ss[1]
 }
 
-// TeeStreamN returns n streams that each receive a copy of each item from the input stream.
-func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
+// TeeN returns n channels that each receive a copy of each item from the input channel.
+func TeeN[T any](ctx context.Context, in <-chan T, n int) []<-chan T {
 	if n <= 0 {
 		panic("n must be greater than 0")
 	}
@@ -35,10 +35,10 @@ func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 		}
 	}()
 
-	streams := make([]Stream[T], n)
+	ins := make([]<-chan T, n)
 	for i := 0; i < n; i++ {
-		streams[i] = out[i]
+		ins[i] = out[i]
 	}
 
-	return streams
+	return ins
 }

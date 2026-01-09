@@ -13,7 +13,7 @@ import (
 
 // ToWriter returns a worker that writes to a bufio.Writer.
 func ToWriter(w *bufio.Writer) rivo.Worker[[]byte, int] {
-	return func(ctx context.Context, in rivo.Stream[[]byte], errs chan<- error) rivo.Stream[int] {
+	return func(ctx context.Context, in <-chan []byte, errs chan<- error) <-chan int {
 		out := make(chan int)
 
 		go func() {
