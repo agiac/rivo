@@ -12,8 +12,8 @@ func TeeStream[T any](ctx context.Context, in Stream[T]) (Stream[T], Stream[T]) 
 
 // TeeStreamN returns n streams that each receive a copy of each item from the input stream.
 func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
-	if n <= 1 {
-		panic("n must be greater than 1")
+	if n <= 0 {
+		panic("n must be greater than 0")
 	}
 
 	out := make([]chan T, n)
@@ -41,37 +41,4 @@ func TeeStreamN[T any](ctx context.Context, in Stream[T], n int) []Stream[T] {
 	}
 
 	return streams
-}
-
-// Tee returns 2 generators that each receive a copy of each item from the input stream.
-func Tee[T any](ctx context.Context, in Stream[T]) (Generator[T], Generator[T]) {
-	streams := TeeStreamN(ctx, in, 2)
-
-	gen1 := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
-		return streams[0]
-	}
-
-	gen2 := func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
-		return streams[1]
-	}
-
-	return gen1, gen2
-}
-
-// TeeN returns n generators that each receive a copy of each item from the input stream.
-func TeeN[T any](ctx context.Context, in Stream[T], n int) []Generator[T] {
-	if n <= 1 {
-		panic("n must be greater than 1")
-	}
-
-	streams := TeeStreamN(ctx, in, n)
-	generators := make([]Generator[T], n)
-
-	for i := 0; i < n; i++ {
-		generators[i] = func(ctx context.Context, _ Stream[None], errs chan<- error) Stream[T] {
-			return streams[i]
-		}
-	}
-
-	return generators
 }

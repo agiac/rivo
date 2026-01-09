@@ -30,3 +30,9 @@ func Connect[T any](pp ...Sync[T]) Sync[T] {
 		return out
 	}
 }
+
+func Fanout[T, U any](g Pipeline[T, U], ss ...Sync[U]) Sync[T] {
+	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[None] {
+		return Connect[U](ss...)(ctx, g(ctx, in, errs), errs)
+	}
+}
