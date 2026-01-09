@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-// Batch returns a Pipeline that batches items from the input Stream into slices of n items.
+// Batch returns a Worker that batches items from the input Stream into slices of n items.
 // If the batch is not full after maxWait, it will be sent anyway.
 // Any error in the input Stream will be propagated to the output Stream immediately.
-func Batch[T any](n int, opt ...BatchOption) Pipeline[T, []T] {
+func Batch[T any](n int, opt ...BatchOption) Worker[T, []T] {
 	o := assertBatchOptions(opt)
 
 	return func(ctx context.Context, in Stream[T], errs chan<- error) Stream[[]T] {

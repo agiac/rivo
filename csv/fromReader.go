@@ -10,9 +10,9 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// FromReader returns a generator pipeline that reads from a csv.Reader.
+// FromReader returns a generator worker that reads from a csv.Reader.
 // It's not thread-safe to use a pool size greater than 1.
-func FromReader(r *csv.Reader, opt ...FromReaderOption) rivo.Pipeline[rivo.None, []string] {
+func FromReader(r *csv.Reader, opt ...FromReaderOption) rivo.Worker[rivo.None, []string] {
 	o := assertFromReaderOptions(opt)
 
 	return rivo.FromFunc(func(ctx context.Context) ([]string, bool, error) {

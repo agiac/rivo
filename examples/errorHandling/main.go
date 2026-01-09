@@ -8,7 +8,7 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// This example demonstrates simple error handling in a pipeline.
+// This example demonstrates simple error handling in a worker.
 // We create a stream of strings, convert them to integers, and log any conversion errors.
 
 func main() {

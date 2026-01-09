@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// FilterMap returns a pipeline that filters and maps items from the input stream.
-func FilterMap[T, U any](f func(context.Context, T) (bool, U, error), opt ...FilterMapOption) Pipeline[T, U] {
+// FilterMap returns a worker that filters and maps items from the input stream.
+func FilterMap[T, U any](f func(context.Context, T) (bool, U, error), opt ...FilterMapOption) Worker[T, U] {
 	o := assertFilterMapOptions(opt)
 
 	return ForEachOutput[T, U](

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Do returns a sync pipeline that applies the given function to each item in the stream.
+// Do returns a sync worker that applies the given function to each item in the stream.
 // The output stream will not emit any items, and it will be closed when the input stream is closed or the context is done.
 // If the function returns an error, it will be sent to the error channel.
 func Do[T any](f func(context.Context, T) error, opt ...DoOption) Sync[T] {

@@ -3,6 +3,7 @@ package bufio
 import (
 	"bufio"
 	"context"
+
 	"github.com/agiac/rivo"
 
 	"github.com/agiac/rivo/io"
@@ -10,8 +11,8 @@ import (
 
 // TODO: consider using ForEachOutput function
 
-// ToWriter returns a pipeline that writes to a bufio.Writer.
-func ToWriter(w *bufio.Writer) rivo.Pipeline[[]byte, int] {
+// ToWriter returns a worker that writes to a bufio.Writer.
+func ToWriter(w *bufio.Writer) rivo.Worker[[]byte, int] {
 	return func(ctx context.Context, in rivo.Stream[[]byte], errs chan<- error) rivo.Stream[int] {
 		out := make(chan int)
 

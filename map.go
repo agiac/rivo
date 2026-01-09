@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// Map returns a pipeline that applies a function to each item from the input stream.
-func Map[T, U any](f func(context.Context, T) (U, error), opt ...MapOption) Pipeline[T, U] {
+// Map returns a worker that applies a function to each item from the input stream.
+func Map[T, U any](f func(context.Context, T) (U, error), opt ...MapOption) Worker[T, U] {
 	o := mustMapOptions(opt)
 
 	return ForEachOutput[T, U](

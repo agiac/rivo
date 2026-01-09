@@ -7,7 +7,7 @@ import (
 	"github.com/agiac/rivo"
 )
 
-// This example demonstrates how to pass additional options to a pipeline.
+// This example demonstrates how to pass additional options to a worker.
 
 func main() {
 	ctx := context.Background()
@@ -18,7 +18,7 @@ func main() {
 		return n * 2, nil
 	}
 
-	// `Pass additional options to the pipeline
+	// `Pass additional options to the worker
 	double := rivo.Map(doubleFn, rivo.MapBufferSize(1))
 
 	p := rivo.Pipe(in, double)

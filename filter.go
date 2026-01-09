@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// Filter returns a pipeline that filters the input stream using the given function.
-func Filter[T any](f func(context.Context, T) (bool, error), opt ...FilterOption) Pipeline[T, T] {
+// Filter returns a worker that filters the input stream using the given function.
+func Filter[T any](f func(context.Context, T) (bool, error), opt ...FilterOption) Worker[T, T] {
 	o := assertFilterOptions(opt)
 
 	return ForEachOutput[T, T](
