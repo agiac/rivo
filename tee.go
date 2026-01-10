@@ -1,6 +1,8 @@
 package rivo
 
-import "context"
+import (
+	"context"
+)
 
 // TODO: tests
 
@@ -30,7 +32,11 @@ func TeeN[T any](ctx context.Context, in <-chan T, n int) []<-chan T {
 
 		for item := range OrDone(ctx, in) {
 			for i := 0; i < n; i++ {
-				out[i] <- item
+				select {
+				case <-ctx.Done():
+					return
+				case out[i] <- item:
+				}
 			}
 		}
 	}()
