@@ -1,10 +1,8 @@
 # rivo
 
-## TODO: review entire README
-
 [![Go Reference](https://pkg.go.dev/badge/github.com/agiac/rivo.svg)](https://pkg.go.dev/github.com/agiac/rivo)
 
-`rivo` is a library for highly concurrent Go programs that provides type safety through generics and a composable worker architecture.
+`rivo` is a library for highly concurrent Go programs that provides type safety through generics and a composable workers architecture.
 
 **NOTE: THIS LIBRARY IS STILL IN ACTIVE DEVELOPMENT AND IS NOT YET PRODUCTION READY.**
 
@@ -31,166 +29,105 @@ and a more intuitive API and developer experience (Rx is very powerful, but can 
 
 ### Basic concepts
 
-`rivo` has several main types, which are the building blocks of the library: `Worker`, `Generator`, `Sync`.
+`rivo` is built around its main `Worker` type, which has the following signature:
 
 ```go
-type Stream[T any] <-chan T
+type Worker[T, U any] = func(ctx context.Context, in <-chan T, errs chan<- error) <-chan U
 ```
 
-`Worker` is a function that takes a `context.Context`, a `Stream` of one type, and an error channel, then returns a `Stream` of the same or a different type.
-They represent the operations that can be performed on streams. Worker can be composed together to create more complex operations.
+This is the result of various iterations and refinements and I believe you could go a long way with it,
+even without using the rest of the library.
+  - The first argument is a `context.Context`, which allows for cancellation and timeouts, as well as passing values down the call chain, if needed. 
+  - The second argument is a read-only channel of type `T`, which represents the input stream of data.
+  - The third argument is a write-only channel for errors. Following Go's focus on explicit error handling, 
+    this channel allows workers to report errors without stopping the entire stream.
+  - The return value is a read-only channel of type `U`, which represents the output stream of data.
 
-```go
-type Worker[T, U any] func(ctx context.Context, stream <-chan T, errs chan<- error) Stream[U]
-```
+This structure allows for a clear flow of data, as well as composability of workers to create complex data processing pipelines, while maintaining type safety and explicit error handling.
 
 For convenience, `rivo` also provides type aliases for common worker patterns:
 
-```go
-// Generator is a worker that generates items of type T without any input
-type Generator[T any] = Worker[None, T]
+`Generator` is a worker that generates items of type `T` without any input: 
 
-// Sync is a worker that processes items of type T and does not emit any items
+```go
+type Generator[T any] = Worker[None, T]
+```
+
+`Sync` is a worker that processes items of type `T` and does not emit any items, except after closing the output channel to signal completion:
+
+```go
 type Sync[T any] = Worker[T, None]
 ```
-
-`Item` is a struct that contains a value and an optional error. It's used when you need error handling in your streams:
-
-```go
-type Item[T any] struct {
-	Val T
-	Err error
-}
-```
-
-Most basic operations work with plain values, but when you need error handling, you can use `Item[T]` and the corresponding workers that support error propagation.
-
-If a worker generates values without depending on an input stream, it is called a _generator_. 
-If it consumes values without generating a new stream, it is called a _sink_. 
-If it transforms values, it is called a _transformer_.
 
 Here's a basic example:
 
 ```go
-package main
-
-import (
-	"context"
-	"fmt"
-
-	"github.com/agiac/rivo"
-)
-
-func main() {
-	ctx := context.Background()
-
-	// `Of` returns a generator that returns a stream that will emit the provided values
-	in := rivo.Of(1, 2, 3, 4, 5)
-
-	// `Filter` returns a worker that filters the input stream using the given function
-	onlyEven := rivo.Filter(func(ctx context.Context, n int) (bool, error) {
-		return n%2 == 0, nil
-	})
-
-	// `Do` returns a worker that applies the given function to each item in the input stream without emitting any values
-	log := rivo.Do(func(ctx context.Context, n int) {
-		fmt.Println(n)
-	})
-
-	// `Pipe` composes workers together, returning a new worker
-	p := rivo.Pipe3(in, onlyEven, log)
-
-	// By passing a context, an input channel, and an error channel to our worker, we can get the output stream.
-	// Since our first worker `in` is a generator and does not depend on an input stream, we can pass a nil channel.
-	// Also, since `log` is a sink, we only have to read once from the output channel to know that the worker has finished.
-	// The third parameter is an error channel, which we can also set to nil if we don't have to handle errors.
-	<-p(ctx, nil, nil)
-
-	// Expected output:
-	// 2
-	// 4
-}
+    package main
+    
+    import (
+      "context"
+      "fmt"
+    
+      "github.com/agiac/rivo"
+    )
+    
+    // This example demonstrates a basic usage of workers and the Pipe function.
+    // We create a channel of integers and filter only the even ones.
+    
+    func main() {
+      ctx := context.Background()
+    
+      // `Of` returns a generator which returns a channel that will emit the provided values
+      in := rivo.Of(1, 2, 3, 4, 5)
+    
+      // `Filter` returns a worker that filters the input channel using the given function.
+      onlyEven := rivo.Filter(func(ctx context.Context, n int) (bool, error) {
+        return n%2 == 0, nil
+      })
+    
+      // `Do` returns a worker that applies the given function to each item in the input channel, without emitting any values.
+      log := rivo.Do(func(ctx context.Context, n int) error {
+        fmt.Println(n)
+        return nil
+      })
+    
+      // `Pipe` composes workers together, returning a new worker
+      p := rivo.Pipe3(in, onlyEven, log)
+    
+      // By passing a context and an input channel to our worker, we can get the output channel.
+      // Since our first worker `in` is a generator and does not depend on an input channel, we can pass a nil channel.
+      // Also, since log is a sink, we only have to read once from the output channel to know that the pipe has finished.
+      <-p(ctx, nil, nil)
+    
+      // Expected output:
+      // 2
+      // 4
+    }
 ```
 
-For error handling scenarios, you can use `Item[T]` as your data type to carry both values and errors:
+`rivo` provides a set of utilities which can be divided in three main categories:
+1. Worker factories: functions that return workers for common use cases, like mapping, filtering, batching, etc.
+2. Flow control: functions that help with composing workers together, like `Pipe`, `Merge`, etc.
+3. Utilities: functions that help with common tasks, like collecting items from a channel, error handling, etc.
 
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"strconv"
-	"sync"
-
-	"github.com/agiac/rivo"
-)
-
-// This example demonstrates simple error handling in a worker.
-// We create a stream of strings, convert them to integers, and log any conversion errors.
-
-func main() {
-	ctx := context.Background()
-
-	// Create a generator with string values
-	g := rivo.Of("1", "2", "invalid", "4", "5")
-
-	// Transform string to Item[int] with error handling
-	toInt := rivo.Map(func(ctx context.Context, s string) (int, error) {
-		return strconv.Atoi(s)
-	})
-
-	handleValues := rivo.Do[int](func(ctx context.Context, i int) {
-		fmt.Println("Value:", i)
-	})
-
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
-	errs := make(chan error, 1)
-	defer close(errs)
-
-	wg.Go(func() {
-		for err := range errs {
-			fmt.Println("ERROR:", err)
-		}
-	})
-
-	p := rivo.Pipe3(g, toInt, handleValues)
-
-	<-p(ctx, nil, errs)
-
-	// Value: 1
-	// Value: 2
-	// ERROR: strconv.Atoi: parsing "invalid": invalid syntax
-	// Value: 4
-	// Value: 5
-}
-```
 
 ## Worker factories
 
-`rivo` comes with a set of built-in worker factories.
-
 ### Generators
-- `Of`: returns a generator worker that emits the provided values;
-- `FromFunc`: returns a generator worker that emits values returned by the provided function until the function returns false;
-- `FromSeq` and `FromSeq2`: return generator workers that emit the values from the provided iterators;
-- `Tee` and `TeeN`: return N generator workers that each receive a copy of each item from the input stream;
-- `Segregate`: returns two generator workers, where the first worker emits items that pass the predicate, and the second worker emits items that do not pass the predicate;
+- `Of`: returns a generator that emits the provided values;
+- `FromFunc`: returns a generator that emits values returned by the provided function until the function returns false;
+- `FromSeq` and `FromSeq2`: return generators that emit the values from the provided iterators;
 
 ### Sinks
 - `Do`: returns a sink worker that performs a side effect for each item in the input stream;
-- `Connect`: returns a sink worker that applies the given sink workers to the input stream concurrently;
 
 ### Transformers
-- `Filter`: returns a transformer worker that filters the input stream using the given function;
-- `Map`: returns a transformer worker that applies a function to each item from the input stream;
-- `FilterMap`: returns a transformer worker that filters and maps items from the input stream in a single operation;
-- `Batch`: returns a transformer worker that groups the input stream into batches of the provided size;
-- `Flatten`: returns a transformer worker that flattens the input stream of slices;
-- `ForEachOutput`: returns a transformer worker that applies a function to each item, allowing direct output channel access;
-- `Pipe`, `Pipe2`, `Pipe3`, `Pipe4`, `Pipe5`: return transformer workers that compose the provided workers together;
+- `Filter`: returns a worker that filters the input stream using the given function;
+- `Map`: returns a worker that applies a function to each item from the input stream;
+- `FilterMap`: returns a worker that filters and maps items from the input stream in a single operation;
+- `Batch`: returns a worker that groups the input stream into batches of the provided size;
+- `Flatten`: returns a worker that flattens the input stream of slices;
+- `ForEachOutput`: returns a worker that applies a function to each item, allowing direct output channel access;
 
 Besides these, the library's subdirectories contain more specialized worker factories.
 
@@ -209,7 +146,7 @@ Besides these, the library's subdirectories contain more specialized worker fact
 - `FromReader`: returns a generator worker that reads from the provided `csv.Reader` and emits the read records;
 - `ToWriter`: returns a sink worker that writes the input stream to the provided `csv.Writer`;
 
-## Configuration Options
+### Configuration Options
 
 Many workers support configuration options to customize their behavior:
 
@@ -228,6 +165,12 @@ mapper := rivo.Map(transformFunc, rivo.MapPoolSize(5), rivo.MapBufferSize(100))
 batcher := rivo.Batch(10, rivo.BatchMaxWait(100*time.Millisecond))
 ```
 
+## Flow control
+
+`rivo` provides functions to compose workers together, allowing you to build complex data processing pipelines:
+- `Pipe`, `Pipe2`, `Pipe3`, ... `Pipe10`: compose multiple workers together into a single worker;
+
+
 ## Utilities
 
 `rivo` provides several utility functions to work with streams:
@@ -235,21 +178,7 @@ batcher := rivo.Batch(10, rivo.BatchMaxWait(100*time.Millisecond))
 - `Collect`: collects all items from a stream into a slice
 - `CollectWithContext`: like `Collect` but respects context cancellation
 - `OrDone`: utility function that propagates context cancellation to streams
-- `FilterMapValues`: extracts only successful values from Item streams
-- `FilterMapErrors`: extracts only errors from Item streams
 - `Merge`: merges multiple streams into a single stream
-
-## Error handling
-
-When you need error handling in your streams, you can use the `Item[T]` type to carry both values and errors through your workers. This allows you to handle errors at any point in the worker without stopping the entire stream.
-
-The library provides several utilities for working with error-carrying streams:
-
-- `FilterMapValues`: extracts only successful values from Item streams, filtering out errors
-- `FilterMapErrors`: extracts only errors from Item streams, filtering out successful values
-- `Segregate`: splits any stream based on a predicate function
-
-See `examples/errorHandling` for comprehensive examples of different error handling patterns.
 
 ## Examples
 
@@ -263,7 +192,6 @@ Contributions are welcome! If you have any ideas, suggestions or bug reports, pl
 
 ## Roadmap
 
-- [ ] Review docs, in particular where "worker" is used instead of "generator", "sink" or "transformer"
 - [ ] Add more workers, also using the [RxJS list of operators](https://rxjs.dev/guide/operators) as a reference:
   - [x] FilterMap (combines filter and map operations)
   - [x] ForEachOutput (direct output channel access)
