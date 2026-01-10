@@ -5,6 +5,11 @@ import (
 	"sync"
 )
 
+// Connect connects multiple Sync workers in parallel.
+// It takes a variable number of Sync workers and returns a new Sync worker
+// that runs all the provided workers concurrently on the same input channel.
+// The output channel of the returned Sync worker will be closed once all
+// the connected workers have completed their processing.
 func Connect[T any](pp ...Sync[T]) Sync[T] {
 	return func(ctx context.Context, in <-chan T, errs chan<- error) <-chan None {
 		out := make(chan None)
@@ -28,11 +33,5 @@ func Connect[T any](pp ...Sync[T]) Sync[T] {
 		}()
 
 		return out
-	}
-}
-
-func Fanout[T, U any](g Worker[T, U], ss ...Sync[U]) Sync[T] {
-	return func(ctx context.Context, in <-chan T, errs chan<- error) <-chan None {
-		return Connect[U](ss...)(ctx, g(ctx, in, errs), errs)
 	}
 }

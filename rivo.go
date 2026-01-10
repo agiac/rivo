@@ -9,7 +9,9 @@ import (
 // depend on any input channel or for a sync worker that does not emit any items.
 type None struct{}
 
-// Worker is a function that takes a context and a channel and returns a channel of the same type or a different type.
+// Worker is the core abstraction representing a processing unit that
+// takes input of type T from a channel, processes it, and emits output of type U to another channel.
+// It also receives a context for cancellation and a channel for reporting errors.
 type Worker[T, U any] = func(ctx context.Context, in <-chan T, errs chan<- error) <-chan U
 
 // Generator is a worker that generates items of type T without any input.
